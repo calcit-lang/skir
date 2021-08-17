@@ -14,11 +14,11 @@
           :require-macros $ [] cljs.core.async.macros :refer ([] go)
       :defs $ {}
         |create-server! $ quote
-          defn create-server! (handler ? user-options)
+          defn create-server! (handler ? user-options) (reset! *req-handler handler)
             let
                 options $ merge default-options user-options
                 server $ http/createServer
-                  fn (req res) (handle-request! req res handler)
+                  fn (req res) (handle-request! req res @*req-handler)
               .!listen server (:port options) (:host options)
                 fn () $ 
                   :after-start options
@@ -64,6 +64,7 @@
             :after-start $ fn (options)
               println $ str "\"Server listening on " (:port options)
             :host "\"0.0.0.0"
+        |*req-handler $ quote (defatom *req-handler nil)
         |handle-request! $ quote
           defn handle-request! (req res handler)
             try
@@ -84,6 +85,8 @@
                   set! (.-statusCode res) 500
                   set! (.-statusMessage res) "\"Server Error"
                   .!end res $ str (pr-str err) &newline &newline (.-stack err)
+        |reset-req-handler! $ quote
+          defn reset-req-handler! (f) (reset! *req-handler f)
     |skir.util $ {}
       :ns $ quote
         ns skir.util $ :require

@@ -21,10 +21,14 @@ defn on-request! (req-edn res)
     :body $ {}
       :message "|Hello World!"
 
-skir/create-server! on-request!
+; "create server"
+skir/create-server! on-request! ({})
+
+; "handle on reload"
+reset-req-handler! on-request!
 ```
 
-Core logic:
+Internally it's just deciding the data to respond:
 
 ```cirru
 cond
@@ -36,6 +40,10 @@ cond
     println "|Response:" response
     raise "|Unrecognized response!"
 ```
+
+### Origin
+
+Previous work https://github.com/mvc-works/skir/ . Now channels is no longer supported.
 
 ### License
 
