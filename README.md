@@ -2,41 +2,48 @@
 Skir - an over-simplified HTTP Node.js server toolkit
 ----
 
-> in ClojureScript.
+> in Calcit-js and Node.js.
 
 ### Usage
-
-[![Clojars Project](https://img.shields.io/clojars/v/mvc-works/skir.svg)](https://clojars.org/mvc-works/skir)
-
-```edn
-[mvc-works/skir "0.0.9-a2"]
-```
 
 WIP...
 
 ```clojure
-(require '[skir.core :as skir])
+ns demo
+  :require $ skir.core :as skir
 
-(defn on-request! [req-edn res]
-  {:code 200
-   :message "OK"
-   :headers {:Content-Type "application/edn"}
-   :body {:message "Hello World!"}})
+defn on-request! (req-edn res)
+  {}
+    :code 200
+    :message "|OK"
+    :headers $ {}
+      :Content-Type "|application/cirru-edn"
+    :body $ {}
+      :message "|Hello World!"
 
-(skir/create-server! #(on-request! %1 %2))
+; "create server"
+skir/create-server! on-request! ({})
+
+; "handle on reload"
+reset-req-handler! on-request!
 ```
 
-Core logic:
+Internally it's just deciding the data to respond:
 
-```clojure
-(cond
+```cirru
+cond
   (map? response) (write-response! res response)
   (fn? response) (response (fn [response-data] (write-response! res response-data)))
   (promise? response) (.then response (fn [result] (write-response! res result)))
-  (chan? response) (go (write-response! res (<! response)) (close! response))
   (= response :effect) (comment "Done with effect")
-  :else (do (println "Response:" response) (throw (js/Error. "Unrecognized response!"))))
+  true $ do
+    println "|Response:" response
+    raise "|Unrecognized response!"
 ```
+
+### Origin
+
+Previous work https://github.com/mvc-works/skir/ . Now channels is no longer supported.
 
 ### License
 

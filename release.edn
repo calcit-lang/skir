@@ -1,6 +1,0 @@
-{:version "0.0.9",
- :group-id "mvc-works",
- :artifact-id "skir",
- :skip-tag true,
- :scm-url "https://github.com/mvc-works/skir"}
-
