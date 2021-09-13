@@ -8,7 +8,7 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 WIP...
 
-```clojure
+```cirru
 ns demo
   :require $ skir.core :as skir
 
