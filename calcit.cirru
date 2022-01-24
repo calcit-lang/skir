@@ -1,9 +1,7 @@
 
 {}
-  :configs $ {} (:reload-fn |skir.app.main/reload!) (:port 6001) (:output |src) (:local-storage-key |calcit-storage) (:storage-key |calcit.cirru) (:version |0.0.10)
-    :modules $ [] |lilac/ |respo-router.calcit/
-    :init-fn |skir.app.main/main!
-    :extension |.cljs
+  :users $ {}
+    |-OxUkFUX3 $ {} (:avatar nil) (:name |chen) (:nickname |chen) (:id |-OxUkFUX3) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
   :ir $ {} (:package |skir)
     :files $ {}
       |skir.core $ {}
@@ -1010,7 +1008,7 @@
                                 :id |p9DyuLxNbbV
                               |j $ {}
                                 :data $ {}
-                                  |T $ {} (:text |.then) (:type :leaf) (:at 1535652004344) (:by |-OxUkFUX3) (:id |bcYs_oGMbcT)
+                                  |T $ {} (:text |.!then) (:type :leaf) (:at 1643039547239) (:by |-OxUkFUX3) (:id |bcYs_oGMbcT)
                                   |j $ {} (:text |response) (:type :leaf) (:at 1535652004344) (:by |-OxUkFUX3) (:id |6vJsfQKJJWZ)
                                   |r $ {}
                                     :data $ {}
@@ -1360,23 +1358,36 @@
                 :at 1535619480997
                 :by |-OxUkFUX3
                 :id |RzzzuHtZBs
-              |v $ {}
+              |v $ {} (:type :expr) (:by |-OxUkFUX3) (:at 1643039670987)
                 :data $ {}
-                  |T $ {} (:text |=) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |JEae2UZdDo)
-                  |j $ {} (:text |x) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |gfIhlhQSx5)
-                  |r $ {}
+                  |T $ {}
                     :data $ {}
-                      |T $ {} (:text |.resolve) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |JKW_ziMy9-)
-                      |j $ {} (:text |js/Promise) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |-4xudVEr7F)
-                      |r $ {} (:text |x) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |3lrPGmVdlN)
+                      |T $ {} (:text |=) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |JEae2UZdDo)
+                      |j $ {} (:text |x) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |gfIhlhQSx5)
+                      |r $ {}
+                        :data $ {}
+                          |j $ {} (:text |js/Promise.resolve) (:type :leaf) (:at 1643039555133) (:by |-OxUkFUX3) (:id |-4xudVEr7F)
+                          |r $ {} (:text |x) (:type :leaf) (:at 1535619480997) (:by |-OxUkFUX3) (:id |3lrPGmVdlN)
+                        :type :expr
+                        :at 1535619480997
+                        :by |-OxUkFUX3
+                        :id |Jn0YLHuh0T
                     :type :expr
                     :at 1535619480997
                     :by |-OxUkFUX3
-                    :id |Jn0YLHuh0T
-                :type :expr
-                :at 1535619480997
-                :by |-OxUkFUX3
-                :id |lsqndA8H0d
+                    :id |lsqndA8H0d
+                  |D $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039673315) (:text |and)
+                  |L $ {} (:type :expr) (:by |-OxUkFUX3) (:at 1643039678885)
+                    :data $ {}
+                      |T $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039680269) (:text |fn?)
+                      |j $ {} (:type :expr) (:by |-OxUkFUX3) (:at 1643039680568)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039685958) (:text |.-then)
+                          |j $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039687651) (:text |x)
+              |t $ {} (:type :expr) (:by |-OxUkFUX3) (:at 1643039708079)
+                :data $ {}
+                  |T $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039708733) (:text |;)
+                  |j $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039709413) (:text "|\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
             :type :expr
             :at 1535619480997
             :by |-OxUkFUX3
@@ -2356,6 +2367,7 @@
                               |v $ {}
                                 :data $ {}
                                   |j $ {} (:text |run-task!) (:type :leaf) (:at 1572594319088) (:by |-OxUkFUX3) (:id |f1g6k6NqouC)
+                                  |L $ {} (:type :leaf) (:by |-OxUkFUX3) (:at 1643039738699) (:text |;)
                                 :type :expr
                                 :at 1572594319088
                                 :by |-OxUkFUX3
@@ -4161,5 +4173,8 @@
           :at 1534217974246
           :by |-OxUkFUX3
           :id |BmUsAwLjBS
-  :users $ {}
-    |-OxUkFUX3 $ {} (:avatar nil) (:name |chen) (:nickname |chen) (:id |-OxUkFUX3) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
+  :configs $ {} (:reload-fn |skir.app.main/reload!) (:port 6001) (:output |src) (:local-storage-key |calcit-storage) (:storage-key |calcit.cirru) (:version |0.0.11)
+    :modules $ [] |lilac/ |respo-router.calcit/
+    :init-fn |skir.app.main/main!
+    :extension |.cljs
+  :entries $ {}
