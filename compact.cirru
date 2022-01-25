@@ -2,7 +2,8 @@
 {} (:package |skir)
   :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!)
     :modules $ [] |lilac/ |respo-router.calcit/
-    :version |0.0.10
+    :version |0.0.11
+  :entries $ {}
   :files $ {}
     |skir.core $ {}
       :ns $ quote
@@ -77,7 +78,7 @@
                   (fn? response)
                     response $ fn (response-data) (write-response! res response-data)
                   (promise? response)
-                    .then response $ fn (result) (write-response! res result)
+                    .!then response $ fn (result) (write-response! res result)
                   (= response :effect) (;nil "\"Done with effect")
                   true $ do (println "\"Response:" response) (raise "\"Unknown response!")
               fn (err)
@@ -94,8 +95,10 @@
           [] cljs.core.async.impl.protocols :as async-protocol
       :defs $ {}
         |promise? $ quote
-          defn promise? (x)
-            = x $ .resolve js/Promise x
+          defn promise? (x) (; "\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
+            and
+              fn? $ .-then x
+              = x $ js/Promise.resolve x
         |key->str $ quote
           defn key->str (v)
             cond
@@ -172,7 +175,7 @@
         |main! $ quote
           defn main! () $ skir/create-server! render!
             {} $ :after-start
-              fn (options) (println "\"options" options) (run-task!)
+              fn (options) (println "\"options" options) (; run-task!)
         |router-rules $ quote
           def router-rules $ {}
             "\"home" $ []
