@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.12)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.13)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -173,10 +173,11 @@
               :body $ any+
             {} $ :check-keys? true
         |req->edn $ quote
-          defn req->edn (req)
+          defn req->edn (req) (js/console.log)
             {}
               :method $ case-default (.-method req) (.-method req) ("\"GET" :get) ("\"HEAD" :head) ("\"POST" :post) ("\"PUT" :put) ("\"DELETE" :delete) ("\"CONNECT" :connect) ("\"OPTIONS" :options) ("\"TRACE" :trace) ("\"PATCH" :patch)
               :url $ .-url req
+              :query $ -> req (.-url) (.!split "\"?") (aget 1) (or "\"") (querystring/parse) (to-calcit-data)
               :headers $ to-calcit-data (.-headers req)
               :body nil
               :original-request req
@@ -200,10 +201,9 @@
                 (js/Array.isArray body) (js/JSON.stringify body)
                 true $ js/JSON.stringify body
       :ns $ quote
-        ns skir.core $ :require ([] "\"http" :as http)
-          [] skir.util :refer $ [] key->str chan? promise?
-          [] cljs.core.async :refer $ [] chan <! >! put! timeout close!
-          [] lilac.core :refer $ [] dev-check record+ number+ string+ any+ keyword+ map+ optional+ or+ bool+ nil+ dict+
+        ns skir.core $ :require ("\"node:http" :as http) ("\"node:querystring" :as querystring)
+          skir.util :refer $ key->str promise?
+          lilac.core :refer $ dev-check record+ number+ string+ any+ keyword+ map+ optional+ or+ bool+ nil+ dict+
     |skir.router $ {}
       :defs $ {}
         |expand-rule $ quote
@@ -278,8 +278,8 @@
               (map? v) (pr-str v)
               true $ str v
         |promise? $ quote
-          defn promise? (x) (; "\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
-            and
+          defn promise? (x)
+            noted "\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise" $ and
               fn? $ .-then x
               = x $ js/Promise.resolve x
       :ns $ quote
