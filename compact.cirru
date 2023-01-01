@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.13)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.14)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -22,7 +22,7 @@
                   router $ parse-address (:url req) router-rules
                   page $ get-in router ([] :path 0)
                   parse-result $ match-path (:url req) "\"a/:b"
-                println "\"Parsed:" router parse-result
+                ; println "\"Parsed:" router parse-result
                 case-default (:name page)
                   {} (:code 404) (:message "\"Page not found")
                     :headers $ {}
@@ -49,7 +49,10 @@
                         resolve $ {} (:code 200)
                           :headers $ {}
                           :body "\"Message from promise"
-                  "\"effect" $ do (println "\"effect") (.!end res) :effect
+                  "\"effect" $ do (println "\"effect")
+                    {} (:code 202)
+                      :headers $ {}
+                      :body :effect
                   "\"error" $ {} (:body "\"error")
                   "\"throw-error" $ raise "\"Custom error"
                   nil $ {} (:code 200) (:message "\"OK, default page")
@@ -80,13 +83,13 @@
             fetch! "\"http://localhost:4000/channel" $ fn (response) (println)
               println "\"Response:" $ pr-str response
       :ns $ quote
-        ns skir.app.main $ :require ([] skir.core :as skir) ([] skir.schema :as schema)
-          [] skir.client :refer $ [] fetch!
-          [] skir.util :refer $ [] clear! delay!
-          [] respo-router.parser :refer $ [] parse-address
-          [] "\"fs" :as fs
-          [] "\"path" :as path
-          [] skir.router :refer $ [] match-path
+        ns skir.app.main $ :require (skir.core :as skir) (skir.schema :as schema)
+          skir.client :refer $ fetch!
+          skir.util :refer $ clear! delay!
+          respo-router.parser :refer $ parse-address
+          "\"fs" :as fs
+          "\"path" :as path
+          skir.router :refer $ match-path
     |skir.client $ {}
       :defs $ {}
         |collect-response-data! $ quote
@@ -121,8 +124,7 @@
         |put! $ quote
           defn put! $ url data options cb
       :ns $ quote
-        ns skir.client $ :require ([] "\"http" :as http)
-          [] cljs.reader :refer $ [] read-string
+        ns skir.client $ :require ("\"http" :as http)
     |skir.core $ {}
       :defs $ {}
         |*req-handler $ quote (defatom *req-handler nil)
@@ -160,7 +162,7 @@
                 do (js/console.error err)
                   set! (.-statusCode res) 500
                   set! (.-statusMessage res) "\"Server Error"
-                  .!end res $ str (pr-str err) &newline &newline (.-stack err)
+                  .!end res $ str (.!toString err) &newline &newline (.-stack err)
         |lilac-response $ quote
           def lilac-response $ record+
             {}
@@ -173,7 +175,7 @@
               :body $ any+
             {} $ :check-keys? true
         |req->edn $ quote
-          defn req->edn (req) (js/console.log)
+          defn req->edn (req)
             {}
               :method $ case-default (.-method req) (.-method req) ("\"GET" :get) ("\"HEAD" :head) ("\"POST" :post) ("\"PUT" :put) ("\"DELETE" :delete) ("\"CONNECT" :connect) ("\"OPTIONS" :options) ("\"TRACE" :trace) ("\"PATCH" :patch)
               :url $ .-url req
@@ -185,10 +187,12 @@
           defn reset-req-handler! (f) (reset! *req-handler f)
         |write-response! $ quote
           defn write-response! (res edn-res) (dev-check edn-res lilac-response)
-            set! (.-statusCode res) (:code edn-res)
-            set! (.-statusMessage res) (:message edn-res)
+            set! (.-statusCode res)
+              either (:code edn-res) 200
+            set! (.-statusMessage res)
+              either (:message edn-res) "\"OK"
             &doseq
-              pair $ :headers edn-res
+              pair $ either (:headers edn-res) ({})
               let[] (k v) pair $ .!setHeader res (key->str k) (key->str v)
             .!end res $ let
                 body $ :body edn-res
@@ -198,6 +202,7 @@
                 (map? body) (format-cirru-edn body)
                 (nil? body) "\""
                 (string? body) body
+                (keyword? body) (pr-str body)
                 (js/Array.isArray body) (js/JSON.stringify body)
                 true $ js/JSON.stringify body
       :ns $ quote
@@ -247,8 +252,7 @@
                 segments $ filter (.split real-path "\"/")
                   \ not $ .blank? %
               match-chunks nil segments rule-path
-      :ns $ quote
-        ns skir.router $ :require ([] clojure.string :as string)
+      :ns $ quote (ns skir.router)
     |skir.schema $ {}
       :defs $ {}
         |request $ quote
@@ -282,7 +286,4 @@
             noted "\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise" $ and
               fn? $ .-then x
               = x $ js/Promise.resolve x
-      :ns $ quote
-        ns skir.util $ :require
-          [] cljs.tools.reader :refer $ [] read-string
-          [] cljs.core.async.impl.protocols :as async-protocol
+      :ns $ quote (ns skir.util)

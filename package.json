@@ -1,6 +1,6 @@
 {
   "name": "skir",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "main": "index.js",
   "repository": "git@github.com:mvc-works/skir.git",
   "author": "jiyinyiyong",
@@ -9,9 +9,9 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.16.4"
+    "esbuild": "^0.16.12"
   },
   "dependencies": {
-    "@calcit/procs": "^0.6.16"
+    "@calcit/procs": "^0.6.18"
   }
 }
