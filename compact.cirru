@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.14)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.15)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -16,7 +16,7 @@
           defn render! (req res)
             do (; println)
               ; println "\"Requests:" $ pr-str req
-              ; println "\"Url:" $ :url req
+              ; println "\"Url:" (:url req) (:path req) (:querystring req) (:query req)
               ; js/console.log (:original-request req) res
               let
                   router $ parse-address (:url req) router-rules
@@ -176,13 +176,18 @@
             {} $ :check-keys? true
         |req->edn $ quote
           defn req->edn (req)
-            {}
-              :method $ case-default (.-method req) (.-method req) ("\"GET" :get) ("\"HEAD" :head) ("\"POST" :post) ("\"PUT" :put) ("\"DELETE" :delete) ("\"CONNECT" :connect) ("\"OPTIONS" :options) ("\"TRACE" :trace) ("\"PATCH" :patch)
-              :url $ .-url req
-              :query $ -> req (.-url) (.!split "\"?") (aget 1) (or "\"") (querystring/parse) (to-calcit-data)
-              :headers $ to-calcit-data (.-headers req)
-              :body nil
-              :original-request req
+            let
+                url-pieces $ -> req (.-url) (.!split "\"?")
+                querystring $ -> url-pieces (aget 1) (or "\"")
+              {}
+                :method $ case-default (.-method req) (.-method req) ("\"GET" :get) ("\"HEAD" :head) ("\"POST" :post) ("\"PUT" :put) ("\"DELETE" :delete) ("\"CONNECT" :connect) ("\"OPTIONS" :options) ("\"TRACE" :trace) ("\"PATCH" :patch)
+                :url $ .-url req
+                :path $ .-0 url-pieces
+                :querystring querystring
+                :query $ -> querystring (querystring/parse) (to-calcit-data)
+                :headers $ to-calcit-data (.-headers req)
+                :body nil
+                :original-request req
         |reset-req-handler! $ quote
           defn reset-req-handler! (f) (reset! *req-handler f)
         |write-response! $ quote
