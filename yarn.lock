@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.6.23":
-  version "0.6.23"
-  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.6.23.tgz#1568826e2275dd1a895bab19465514e7146f893f"
-  integrity sha512-qsNFmxZPsaa+D+p+oQhzRy8UOtpwQNpQF2wbCWgaxHKfvmvzt2fLFmZkSSUmY8ksmFb1rdK9zSbXK7U4/MO+uw==
+"@calcit/procs@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.7.0.tgz#09a66c814c849beb9403e1f63ec24fbd655c1430"
+  integrity sha512-Q+K1cWxm/F58jEOYVNy7HbMFqtiF0+tdUsamLJrNaUUU5/gNymfI9WvgiWYBp7/KiWm8gsPximu9zIkcrW4pwQ==
   dependencies:
     "@calcit/ternary-tree" "0.0.19"
     "@cirru/parser.ts" "^0.0.6"

@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.15)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.16)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -170,8 +170,8 @@
               :message $ optional+ (string+)
               :headers $ optional+
                 dict+
-                  or+ $ [] (keyword+) (string+)
-                  or+ $ [] (keyword+) (string+) (bool+) (nil+)
+                  or+ $ [] (tag+) (string+)
+                  or+ $ [] (tag+) (string+) (bool+) (nil+)
               :body $ any+
             {} $ :check-keys? true
         |req->edn $ quote
@@ -207,13 +207,13 @@
                 (map? body) (format-cirru-edn body)
                 (nil? body) "\""
                 (string? body) body
-                (keyword? body) (pr-str body)
+                (tag? body) (pr-str body)
                 (js/Array.isArray body) (js/JSON.stringify body)
                 true $ js/JSON.stringify body
       :ns $ quote
         ns skir.core $ :require ("\"node:http" :as http) ("\"node:querystring" :as querystring)
           skir.util :refer $ key->str promise?
-          lilac.core :refer $ dev-check record+ number+ string+ any+ keyword+ map+ optional+ or+ bool+ nil+ dict+
+          lilac.core :refer $ dev-check record+ number+ string+ any+ tag+ map+ optional+ or+ bool+ nil+ dict+
     |skir.router $ {}
       :defs $ {}
         |expand-rule $ quote
@@ -221,7 +221,7 @@
             map (.split rule-string "\"/")
               fn (x)
                 if (.starts-with? x "\":")
-                  turn-keyword $ &str:slice x 1
+                  turn-tag $ &str:slice x 1
                   , x
         |match-chunks $ quote
           defn match-chunks (result segments rule)
@@ -242,7 +242,7 @@
                 true $ let
                     s0 $ first segments
                     r0 $ first rule
-                  if (keyword? r0)
+                  if (tag? r0)
                     recur
                       assoc-in result ([] :data r0) s0
                       rest segments
@@ -280,7 +280,7 @@
         |key->str $ quote
           defn key->str (v)
             cond
-                keyword? v
+                tag? v
                 turn-string v
               (string? v) v
               (list? v) (pr-str v)
