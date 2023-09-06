@@ -25,7 +25,7 @@
                     router $ parse-address (:url req) router-rules
                     page $ get-in router ([] :path)
                     parse-result $ match-path (:url req) "\"a/:b"
-                  println "\"Parsed:" router parse-result page
+                  ; println "\"Parsed:" router parse-result page
                   tag-match (nth page 0)
                       :callback
                       fn (send!)
@@ -61,10 +61,10 @@
                     (:error)
                       {} $ :body "\"error"
                     (:throw-error) (raise "\"Custom error")
-                    (:404)
-                      {} (:code 200) (:message "\"OK, default page")
+                    (:404 paths)
+                      {} (:code 404) (:message "\"No matched route")
                         :headers $ {}
-                        :body "\"Home page"
+                        :body $ str paths
                     _ $ {} (:code 404) (:message "\"Page not found")
                       :headers $ {}
                       :body $ str "\"404 page for " (to-lispy-string page)
