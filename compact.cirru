@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.17)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:reload-fn |skir.app.main/reload!) (:version |0.0.18)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -26,6 +26,7 @@
                     page $ get-in router ([] :path)
                     parse-result $ match-path (:url req) "\"a/:b"
                   ; println "\"Parsed:" router parse-result page
+                  println "\"Route:" $ nth page 0
                   tag-match (nth page 0)
                       :callback
                       fn (send!)
@@ -58,6 +59,13 @@
                         {} (:code 202)
                           :headers $ {}
                           :body :effect
+                    (:body)
+                      fn (cb)
+                        collect-body-str (:original-request req)
+                          fn (body) (println "\"BODY:" body)
+                            cb $ {} (:code 200)
+                              :headers $ {}
+                              :body :body
                     (:error)
                       {} $ :body "\"error"
                     (:throw-error) (raise "\"Custom error")
@@ -77,7 +85,7 @@
               :: :json $ [] "\"json"
               :: :edn $ [] "\"edn"
               :: :promise $ [] "\"promise"
-              :: :channel $ [] "\"channel"
+              :: :body $ [] "\"body"
               :: :error $ [] "\"error"
               :: :effect $ [] "\"effect"
               :: :throw-error $ [] "\"throw-error"
@@ -99,7 +107,7 @@
         :code $ quote
           ns skir.app.main $ :require (skir.core :as skir) (skir.schema :as schema)
             skir.client :refer $ fetch!
-            skir.util :refer $ clear! delay!
+            skir.util :refer $ clear! delay! collect-body-str
             respo-router.parser :refer $ parse-address
             "\"fs" :as fs
             "\"path" :as path
@@ -213,7 +221,7 @@
                   :querystring querystring
                   :query $ -> querystring (querystring/parse) (to-calcit-data)
                   :headers $ to-calcit-data (.-headers req)
-                  :body nil
+                  :body $ do (; js/console.log "\"REQUEST:" req) nil
                   :original-request req
         |reset-req-handler! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -312,6 +320,20 @@
           :code $ quote
             defn clear! () (.clear js/console)
               ; -> js/process .-stdout $ .write (read-string "\"\"\\033c\"")
+        |collect-body-str $ %{} :CodeEntry (:doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction")
+          :code $ quote
+            defn collect-body-str (request ? cb)
+              new js/Promise $ fn (resolve reject)
+                let
+                    *buf $ js-array
+                  -> request
+                    .!on "\"error" $ fn (err) (reject)
+                    .!on "\"data" $ fn (data) (.!push *buf data)
+                    .!on "\"end" $ fn ()
+                      let
+                          d $ -> js/Buffer (.!concat *buf) (.!toString)
+                        if (fn? cb) (cb d)
+                        resolve d
         |delay! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn delay! (duration task)
@@ -326,10 +348,10 @@
                 (list? v) (to-lispy-string v)
                 (map? v) (to-lispy-string v)
                 true $ str v
-        |promise? $ %{} :CodeEntry (:doc |)
+        |promise? $ %{} :CodeEntry (:doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
           :code $ quote
             defn promise? (x)
-              noted "\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise" $ and
+              and
                 fn? $ .-then x
                 = x $ js/Promise.resolve x
       :ns $ %{} :CodeEntry (:doc |)

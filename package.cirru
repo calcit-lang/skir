@@ -2,4 +2,4 @@
 {}
   :dependencies $ {}
     |calcit-lang/lilac |main
-    |Respo/respo-router.calcit |0.8.0
+    |Respo/respo-router.calcit |main

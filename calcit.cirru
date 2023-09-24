@@ -1,6 +1,6 @@
 
 {} (:package |skir)
-  :configs $ {} (:init-fn |skir.app.main/main!) (:local-storage-key |calcit-storage) (:output |src) (:port 6001) (:reload-fn |skir.app.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.17)
+  :configs $ {} (:init-fn |skir.app.main/main!) (:local-storage-key |calcit-storage) (:output |src) (:port 6001) (:reload-fn |skir.app.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.18)
     :modules $ [] |lilac/ |respo-router.calcit/
   :entries $ {}
   :files $ {}
@@ -73,7 +73,7 @@
                       |T $ %{} :Leaf (:at 1534220438839) (:by |-OxUkFUX3) (:text |println)
                   |L $ %{} :Expr (:at 1534219160234) (:by |-OxUkFUX3)
                     :data $ {}
-                      |D $ %{} :Leaf (:at 1678528039589) (:by |-OxUkFUX3) (:text |;)
+                      |D $ %{} :Leaf (:at 1695531591990) (:by |-OxUkFUX3) (:text |;)
                       |T $ %{} :Leaf (:at 1534219164137) (:by |-OxUkFUX3) (:text |println)
                       |b $ %{} :Leaf (:at 1534227943930) (:by |-OxUkFUX3) (:text "|\"Requests:")
                       |j $ %{} :Expr (:at 1535651823450) (:by |-OxUkFUX3)
@@ -103,7 +103,7 @@
                           |b $ %{} :Leaf (:at 1678528332450) (:by |-OxUkFUX3) (:text |req)
                   |Q $ %{} :Expr (:at 1583508068065) (:by |-OxUkFUX3)
                     :data $ {}
-                      |D $ %{} :Leaf (:at 1596100347850) (:by |-OxUkFUX3) (:text |;)
+                      |D $ %{} :Leaf (:at 1695531446171) (:by |-OxUkFUX3) (:text |;)
                       |T $ %{} :Leaf (:at 1583508983668) (:by |-OxUkFUX3) (:text |js/console.log)
                       |j $ %{} :Expr (:at 1583509105622) (:by |-OxUkFUX3)
                         :data $ {}
@@ -156,6 +156,15 @@
                           |n $ %{} :Leaf (:at 1596100849237) (:by |-OxUkFUX3) (:text |router)
                           |r $ %{} :Leaf (:at 1575824057765) (:by |-OxUkFUX3) (:text |parse-result)
                           |t $ %{} :Leaf (:at 1694023168999) (:by |-OxUkFUX3) (:text |page)
+                      |R $ %{} :Expr (:at 1695531606627) (:by |-OxUkFUX3)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1695531607381) (:by |-OxUkFUX3) (:text |println)
+                          |X $ %{} :Leaf (:at 1695532291990) (:by |-OxUkFUX3) (:text "|\"Route:")
+                          |b $ %{} :Expr (:at 1695531607754) (:by |-OxUkFUX3)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1695531607754) (:by |-OxUkFUX3) (:text |nth)
+                              |b $ %{} :Leaf (:at 1695531607754) (:by |-OxUkFUX3) (:text |page)
+                              |h $ %{} :Leaf (:at 1695531607754) (:by |-OxUkFUX3) (:text |0)
                       |T $ %{} :Expr (:at 1534227524748) (:by |-OxUkFUX3)
                         :data $ {}
                           |D $ %{} :Leaf (:at 1694023002873) (:by |-OxUkFUX3) (:text |tag-match)
@@ -378,6 +387,55 @@
                                         :data $ {}
                                           |D $ %{} :Leaf (:at 1672595725814) (:by |-OxUkFUX3) (:text |:body)
                                           |T $ %{} :Leaf (:at 1672596095165) (:by |-OxUkFUX3) (:text |:effect)
+                          |mtT $ %{} :Expr (:at 1695530971053) (:by |-OxUkFUX3)
+                            :data $ {}
+                              |T $ %{} :Expr (:at 1695531161398) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1695530972097) (:by |-OxUkFUX3) (:text |:body)
+                              |b $ %{} :Expr (:at 1695532193510) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |D $ %{} :Leaf (:at 1695532262808) (:by |-OxUkFUX3) (:text |fn)
+                                  |L $ %{} :Expr (:at 1695532263218) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1695532263560) (:by |-OxUkFUX3) (:text |cb)
+                                  |T $ %{} :Expr (:at 1695531005996) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |D $ %{} :Leaf (:at 1695531017530) (:by |-OxUkFUX3) (:text |collect-body-str)
+                                      |L $ %{} :Expr (:at 1695531362185) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695531362185) (:by |-OxUkFUX3) (:text |:original-request)
+                                          |b $ %{} :Leaf (:at 1695531362185) (:by |-OxUkFUX3) (:text |req)
+                                      |T $ %{} :Expr (:at 1695531018802) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |D $ %{} :Leaf (:at 1695531019264) (:by |-OxUkFUX3) (:text |fn)
+                                          |L $ %{} :Expr (:at 1695531019517) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1695531022021) (:by |-OxUkFUX3) (:text |body)
+                                          |Q $ %{} :Expr (:at 1695531031976) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1695531032797) (:by |-OxUkFUX3) (:text |println)
+                                              |b $ %{} :Leaf (:at 1695532105123) (:by |-OxUkFUX3) (:text "|\"BODY:")
+                                              |h $ %{} :Leaf (:at 1695531034758) (:by |-OxUkFUX3) (:text |body)
+                                          |V $ %{} :Expr (:at 1695532267529) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |D $ %{} :Leaf (:at 1695532276235) (:by |-OxUkFUX3) (:text |cb)
+                                              |T $ %{} :Expr (:at 1695531027541) (:by |-OxUkFUX3)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1695531027541) (:by |-OxUkFUX3) (:text |{})
+                                                  |b $ %{} :Expr (:at 1695531027541) (:by |-OxUkFUX3)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1695531027541) (:by |-OxUkFUX3) (:text |:code)
+                                                      |b $ %{} :Leaf (:at 1695531030866) (:by |-OxUkFUX3) (:text |200)
+                                                  |h $ %{} :Expr (:at 1695531027541) (:by |-OxUkFUX3)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1695531027541) (:by |-OxUkFUX3) (:text |:headers)
+                                                      |b $ %{} :Expr (:at 1695531027541) (:by |-OxUkFUX3)
+                                                        :data $ {}
+                                                          |T $ %{} :Leaf (:at 1695531027541) (:by |-OxUkFUX3) (:text |{})
+                                                  |l $ %{} :Expr (:at 1695531027541) (:by |-OxUkFUX3)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1695531027541) (:by |-OxUkFUX3) (:text |:body)
+                                                      |b $ %{} :Leaf (:at 1695531028920) (:by |-OxUkFUX3) (:text |:body)
                           |mu $ %{} :Expr (:at 1597033714880) (:by |-OxUkFUX3)
                             :data $ {}
                               |T $ %{} :Expr (:at 1694023035908) (:by |-OxUkFUX3)
@@ -519,11 +577,11 @@
                   |yj $ %{} :Expr (:at 1535652298625) (:by |-OxUkFUX3)
                     :data $ {}
                       |D $ %{} :Leaf (:at 1694022407097) (:by |-OxUkFUX3) (:text |::)
-                      |T $ %{} :Leaf (:at 1694022602699) (:by |-OxUkFUX3) (:text |:channel)
+                      |T $ %{} :Leaf (:at 1695531621335) (:by |-OxUkFUX3) (:text |:body)
                       |j $ %{} :Expr (:at 1535652301260) (:by |-OxUkFUX3)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1535652302074) (:by |-OxUkFUX3) (:text |[])
-                          |b $ %{} :Leaf (:at 1694022874150) (:by |-OxUkFUX3) (:text "|\"channel")
+                          |b $ %{} :Leaf (:at 1695531622647) (:by |-OxUkFUX3) (:text "|\"body")
                   |yr $ %{} :Expr (:at 1597033759090) (:by |-OxUkFUX3)
                     :data $ {}
                       |D $ %{} :Leaf (:at 1694022408428) (:by |-OxUkFUX3) (:text |::)
@@ -682,6 +740,7 @@
                       :data $ {}
                         |j $ %{} :Leaf (:at 1534221313316) (:by |-OxUkFUX3) (:text |clear!)
                         |r $ %{} :Leaf (:at 1534227844130) (:by |-OxUkFUX3) (:text |delay!)
+                        |t $ %{} :Leaf (:at 1695531013497) (:by |-OxUkFUX3) (:text |collect-body-str)
                 |y $ %{} :Expr (:at 1534227454191) (:by |-OxUkFUX3)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1534227460669) (:by |-OxUkFUX3) (:text |respo-router.parser)
@@ -1422,7 +1481,16 @@
                       |v $ %{} :Expr (:at 1534220571911) (:by |-OxUkFUX3)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1534220571911) (:by |-OxUkFUX3) (:text |:body)
-                          |j $ %{} :Leaf (:at 1534220571911) (:by |-OxUkFUX3) (:text |nil)
+                          |j $ %{} :Expr (:at 1694963369204) (:by |-OxUkFUX3)
+                            :data $ {}
+                              |D $ %{} :Leaf (:at 1694963370620) (:by |-OxUkFUX3) (:text |do)
+                              |L $ %{} :Expr (:at 1694963371536) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |5 $ %{} :Leaf (:at 1695531487846) (:by |-OxUkFUX3) (:text |;)
+                                  |D $ %{} :Leaf (:at 1694963378759) (:by |-OxUkFUX3) (:text |js/console.log)
+                                  |L $ %{} :Leaf (:at 1694963381809) (:by |-OxUkFUX3) (:text "|\"REQUEST:")
+                                  |T $ %{} :Leaf (:at 1694963375949) (:by |-OxUkFUX3) (:text |req)
+                              |T $ %{} :Leaf (:at 1694963370048) (:by |-OxUkFUX3) (:text |nil)
                       |x $ %{} :Expr (:at 1583508871290) (:by |-OxUkFUX3)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1583508976537) (:by |-OxUkFUX3) (:text |:original-request)
@@ -2035,6 +2103,113 @@
                         :data $ {}
                           |D $ %{} :Leaf (:at 1534221213915) (:by |-OxUkFUX3) (:text |read-string)
                           |T $ %{} :Leaf (:at 1534221390701) (:by |-OxUkFUX3) (:text "|\"\"\\033c\"")
+        |collect-body-str $ %{} :CodeEntry (:doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction")
+          :code $ %{} :Expr (:at 1695530704990) (:by |-OxUkFUX3)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1695530704990) (:by |-OxUkFUX3) (:text |defn)
+              |b $ %{} :Leaf (:at 1695530939840) (:by |-OxUkFUX3) (:text |collect-body-str)
+              |h $ %{} :Expr (:at 1695530704990) (:by |-OxUkFUX3)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1695531190625) (:by |-OxUkFUX3) (:text |request)
+                  |X $ %{} :Leaf (:at 1695532007251) (:by |-OxUkFUX3) (:text |?)
+                  |b $ %{} :Leaf (:at 1695531368814) (:by |-OxUkFUX3) (:text |cb)
+              |l $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |new)
+                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |js/Promise)
+                  |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |fn)
+                      |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |resolve)
+                          |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |reject)
+                      |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |let)
+                          |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                            :data $ {}
+                              |T $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |*buf)
+                                  |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |js-array)
+                          |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |->)
+                              |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |request)
+                              |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!on)
+                                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text "|\"error")
+                                  |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |fn)
+                                      |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |err)
+                                      |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |reject)
+                              |l $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!on)
+                                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text "|\"data")
+                                  |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |fn)
+                                      |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |data)
+                                      |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!push)
+                                          |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |*buf)
+                                          |h $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |data)
+                              |o $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!on)
+                                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text "|\"end")
+                                  |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |fn)
+                                      |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                      |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |let)
+                                          |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |T $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |d)
+                                                  |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |->)
+                                                      |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |js/Buffer)
+                                                      |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                        :data $ {}
+                                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!concat)
+                                                          |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |*buf)
+                                                      |l $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                        :data $ {}
+                                                          |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |.!toString)
+                                          |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |if)
+                                              |b $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |fn?)
+                                                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |cb)
+                                              |h $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |cb)
+                                                  |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |d)
+                                          |l $ %{} :Expr (:at 1695532050327) (:by |-OxUkFUX3)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |resolve)
+                                              |b $ %{} :Leaf (:at 1695532050327) (:by |-OxUkFUX3) (:text |d)
         |delay! $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1534227796527) (:by |-OxUkFUX3)
             :data $ {}
@@ -2108,7 +2283,7 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1534402071324) (:by |-OxUkFUX3) (:text |str)
                           |j $ %{} :Leaf (:at 1534402071622) (:by |-OxUkFUX3) (:text |v)
-        |promise? $ %{} :CodeEntry (:doc |)
+        |promise? $ %{} :CodeEntry (:doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
           :code $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
             :data $ {}
               |T $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |defn)
@@ -2116,28 +2291,24 @@
               |r $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |x)
-              |v $ %{} :Expr (:at 1670908793808) (:by |-OxUkFUX3)
+              |v $ %{} :Expr (:at 1643039670987) (:by |-OxUkFUX3)
                 :data $ {}
-                  |D $ %{} :Leaf (:at 1670908795293) (:by |-OxUkFUX3) (:text |noted)
-                  |L $ %{} :Leaf (:at 1670908795955) (:by |-OxUkFUX3) (:text "|\"https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
-                  |T $ %{} :Expr (:at 1643039670987) (:by |-OxUkFUX3)
+                  |D $ %{} :Leaf (:at 1643039673315) (:by |-OxUkFUX3) (:text |and)
+                  |L $ %{} :Expr (:at 1643039678885) (:by |-OxUkFUX3)
                     :data $ {}
-                      |D $ %{} :Leaf (:at 1643039673315) (:by |-OxUkFUX3) (:text |and)
-                      |L $ %{} :Expr (:at 1643039678885) (:by |-OxUkFUX3)
+                      |T $ %{} :Leaf (:at 1643039680269) (:by |-OxUkFUX3) (:text |fn?)
+                      |j $ %{} :Expr (:at 1643039680568) (:by |-OxUkFUX3)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1643039680269) (:by |-OxUkFUX3) (:text |fn?)
-                          |j $ %{} :Expr (:at 1643039680568) (:by |-OxUkFUX3)
-                            :data $ {}
-                              |T $ %{} :Leaf (:at 1643039685958) (:by |-OxUkFUX3) (:text |.-then)
-                              |j $ %{} :Leaf (:at 1643039687651) (:by |-OxUkFUX3) (:text |x)
-                      |T $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
+                          |T $ %{} :Leaf (:at 1643039685958) (:by |-OxUkFUX3) (:text |.-then)
+                          |j $ %{} :Leaf (:at 1643039687651) (:by |-OxUkFUX3) (:text |x)
+                  |T $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |=)
+                      |j $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |x)
+                      |r $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |=)
-                          |j $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |x)
-                          |r $ %{} :Expr (:at 1535619480997) (:by |-OxUkFUX3)
-                            :data $ {}
-                              |j $ %{} :Leaf (:at 1643039555133) (:by |-OxUkFUX3) (:text |js/Promise.resolve)
-                              |r $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |x)
+                          |j $ %{} :Leaf (:at 1643039555133) (:by |-OxUkFUX3) (:text |js/Promise.resolve)
+                          |r $ %{} :Leaf (:at 1535619480997) (:by |-OxUkFUX3) (:text |x)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ %{} :Expr (:at 1534220741654) (:by |-OxUkFUX3)
           :data $ {}
