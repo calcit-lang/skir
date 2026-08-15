@@ -27,5 +27,14 @@ jobs:
     - name: Install deps
       run: caps --ci && yarn install --immutable
 
+    - name: Validate Calcit snapshot and types
+      run: |
+        cr calcit.cirru edit format
+        git diff --exit-code -- calcit.cirru
+        cr calcit.cirru --check-only
+        cr calcit.cirru analyze check-types --summary-only --format json
+        cr calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+        cr calcit.cirru analyze deprecated --summary-only --format json
+
     - name: Compile to JavaScript
-      run: cr js
+      run: cr calcit.cirru js
