@@ -27,9 +27,9 @@
                 ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
                 ; js/console.log (:original-request req) res
                 let
-                    router $ parse-address (&struct:get req :url) router-rules
+                    router $ parse-address (:url req) router-rules
                     page $ get-in router ([] :path)
-                    parse-result $ match-path (&struct:get req :url) |a/:b
+                    parse-result $ match-path (:url req) |a/:b
                   ; println |Parsed: router parse-result page
                   println |Route: $ nth page 0
                   tag-match (nth page 0)
@@ -66,7 +66,7 @@
                           :body :effect
                     (:body)
                       fn (cb)
-                        collect-body-str (&struct:get req :original-request)
+                        collect-body-str (:original-request req)
                           fn (body) (println |BODY: body)
                             cb $ {} (:code 200)
                               :headers $ {}
@@ -202,9 +202,12 @@
                   options $ merge default-options user-options
                   server $ http/createServer
                     fn (req res) (handle-request! req res @*req-handler)
-                .!listen server (&struct:get options :port) (&struct:get options :host)
+                .!listen server
+                  option:unwrap-or (get options :port) 4000
+                  option:unwrap-or (get options :host) |0.0.0.0
                   fn () $
-                        &struct:get options :after-start
+                        option:unwrap-or (get options :after-start)
+                          fn (_) nil
                         , options
                       , options
                     , options
@@ -214,7 +217,8 @@
           :code $ quote
             def default-options $ %{} skir.schema/ServerOptions (:port 4000)
               :after-start $ fn (options)
-                println $ str "|Server listening on " (&struct:get options :port)
+                println $ str "|Server listening on "
+                  option:unwrap-or (get options :port) 4000
               :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
