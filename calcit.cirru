@@ -1,7 +1,8 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |skir) (:version |0.0.18)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |skir)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'skir.app.main/main!) (:mode :native) (:reload-fn 'skir.app.main/reload!)
+      :feature-policy $ {}
       :modules $ [] |lilac/ |respo-router.calcit/
       :type-slots $ {}
   :files $ {}
@@ -379,7 +380,7 @@
           :code $ quote
             defstruct Request (:method 'Tag) (:url 'String) (:path 'String) (:querystring 'String) (:query 'Dynamic) (:headers 'Map) (:body 'Dynamic) (:original-request 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Response $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Response (:code 'Number)
@@ -387,12 +388,12 @@
               :headers 'Map
               :body 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |ServerOptions $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct ServerOptions (:port 'Number) (:after-start 'Fn) (:host 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |request $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def request $ %{} skir.schema/Request (:method :get) (:url |) (:path |) (:querystring |)
