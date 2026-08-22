@@ -7,6 +7,6 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "dependencies": {
-    "@calcit/procs": "^0.13.27"
+    "@calcit/procs": "^0.13.29"
   }
 }
