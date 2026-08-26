@@ -250,7 +250,9 @@
             defn req->edn (req)
               let
                   url $ unsafe-coerce (.-url req) String
-                  url-pieces $ unsafe-coerce (.!split url |?) (:: 'List 'String)
+                  url-pieces $ unsafe-coerce
+                    to-calcit-data $ .!split url |?
+                    :: 'List 'String
                   querystring $ option:unwrap-or (nth url-pieces 1) |
                 %{} skir.schema/Request
                   :method $ case-default (.-method req) (.-method req) (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
