@@ -3,7 +3,7 @@
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'skir.app.main/main!) (:mode :native) (:reload-fn 'skir.app.main/reload!)
       :feature-policy $ {}
-      :modules $ [] |lilac/ |respo-router.calcit/
+      :modules $ [] |respo-router.calcit/
       :type-slots $ {}
   :files $ {}
     |skir.app.main $ %{} 'FileEntry
@@ -200,18 +200,14 @@
           :code $ quote
             defn create-server! (handler ? user-options) (reset! *req-handler handler)
               let
-                  options $ merge default-options user-options
+                  options $ unsafe-coerce (merge default-options user-options) 'skir.schema/ServerOptions
                   server $ http/createServer
                     fn (req res) (handle-request! req res @*req-handler)
-                .!listen server
-                  option:unwrap-or (get options :port) 4000
-                  option:unwrap-or (get options :host) |0.0.0.0
+                .!listen server (:port options) (:host options)
                   fn () $
-                        option:unwrap-or (get options :after-start)
-                          fn (_) nil
-                        , options
-                      , options
+                    :after-start options
                     , options
+                  , options
           :examples $ []
           :schema $ :: 'Dynamic
         |default-options $ %{} 'CodeEntry (:doc |)
@@ -219,7 +215,7 @@
             def default-options $ %{} skir.schema/ServerOptions (:port 4000)
               :after-start $ fn (options)
                 println $ str "|Server listening on "
-                  option:unwrap-or (get options :port) 4000
+                  :port $ unsafe-coerce options 'skir.schema/ServerOptions
               :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
@@ -249,20 +245,6 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |lilac-response $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def lilac-response $ record+
-              {}
-                :code $ number+
-                :message $ optional+ (string+)
-                :headers $ optional+
-                  dict+
-                    or+ $ [] (tag+) (string+)
-                    or+ $ [] (tag+) (string+) (bool+) (nil+)
-                :body $ any+
-              {} $ :check-keys? true
-          :examples $ []
-          :schema $ :: 'Dynamic
         |req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn req->edn (req)
@@ -291,7 +273,7 @@
           :schema $ :: 'Dynamic
         |write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn write-response! (res edn-res) (dev-check edn-res lilac-response)
+            defn write-response! (res edn-res)
               set! (.-statusCode res)
                 either (&map:get edn-res :code) 200
               set! (.-statusMessage res)
@@ -319,7 +301,6 @@
         :code $ quote
           ns skir.core $ :require (|node:http :as http) (|node:querystring :as querystring)
             skir.util :refer $ key->str promise?
-            lilac.core :refer $ dev-check record+ number+ string+ any+ tag+ map+ optional+ or+ bool+ nil+ dict+
     |skir.router $ %{} 'FileEntry
       :defs $ {}
         |expand-rule $ %{} 'CodeEntry (:doc |)
