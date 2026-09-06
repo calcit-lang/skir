@@ -6,21 +6,21 @@
       :modules $ [] |respo-router.calcit/
       :type-slots $ {}
   :files $ {}
-    |skir.app.main $ %{} 'FileEntry
+    'skir.app.main $ %{} 'FileEntry
       :defs $ {}
-        |main! $ %{} 'CodeEntry (:doc |)
+        'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! () $ skir/create-server! render!
               {} $ :after-start
                 fn (options) (println |options options) (; run-task!)
           :examples $ []
           :schema $ :: 'Dynamic
-        |reload! $ %{} 'CodeEntry (:doc |)
+        'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () (clear!) (println |Reload!) (run-task!)
           :examples $ []
           :schema $ :: 'Dynamic
-        |render! $ %{} 'CodeEntry (:doc |)
+        'render! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render! (req res)
               do (; println)
@@ -29,11 +29,15 @@
                 ; js/console.log (:original-request req) res
                 let
                     router $ parse-address (:url req) router-rules
-                    page $ get-in router ([] :path)
+                    page $ option:unwrap-or
+                      get-in router $ [] :path
+                      []
+                    route $ option:unwrap-or (nth page 0)
+                      :: :404 $ []
                     parse-result $ match-path (:url req) |a/:b
                   ; println |Parsed: router parse-result page
-                  println |Route: $ nth page 0
-                  tag-match (nth page 0)
+                  println |Route: route
+                  match route
                     (:callback)
                       fn (send!)
                         delay! 3 $ \ send!
@@ -87,7 +91,7 @@
             {} (:return 'Dynamic)
               :args $ [] 'skir.schema/Request 'Dynamic
               :features $ #{} :js-ffi
-        |router-rules $ %{} 'CodeEntry (:doc |)
+        'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def router-rules $ []
               :: :home $ [] |home
@@ -102,12 +106,12 @@
               :: :throw-error $ [] |throw-error
           :examples $ []
           :schema $ :: 'Dynamic
-        |run-task! $ %{} 'CodeEntry (:doc |)
+        'run-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn run-task! () $ try-request!
           :examples $ []
           :schema $ :: 'Dynamic
-        |try-request! $ %{} 'CodeEntry (:doc |)
+        'try-request! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn try-request! ()
               fetch! |http://localhost:4000 $ fn (response) (println)
@@ -129,9 +133,9 @@
             |fs :as fs
             |path :as path
             skir.router :refer $ match-path
-    |skir.client $ %{} 'FileEntry
+    'skir.client $ %{} 'FileEntry
       :defs $ {}
-        |collect-response-data! $ %{} 'CodeEntry (:doc |)
+        'collect-response-data! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn collect-response-data! (res cb!)
               let
@@ -145,18 +149,18 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |delete! $ %{} 'CodeEntry (:doc |)
+        'delete! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn delete! $ url options cb
           :examples $ []
           :schema $ :: 'Dynamic
-        |fetch! $ %{} 'CodeEntry (:doc |)
+        'fetch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn fetch! (url cb)
               get! url ({}) cb
           :examples $ []
           :schema $ :: 'Dynamic
-        |get! $ %{} 'CodeEntry (:doc |)
+        'get! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn get! (url options cb)
               http/get url $ fn (res)
@@ -177,12 +181,12 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |post! $ %{} 'CodeEntry (:doc |)
+        'post! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn post! $ url data options cb
           :examples $ []
           :schema $ :: 'Dynamic
-        |put! $ %{} 'CodeEntry (:doc |)
+        'put! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn put! $ url data options cb
           :examples $ []
@@ -190,17 +194,33 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns skir.client $ :require (|http :as http)
-    |skir.core $ %{} 'FileEntry
+    'skir.core $ %{} 'FileEntry
       :defs $ {}
-        |*req-handler $ %{} 'CodeEntry (:doc |)
+        '*req-handler $ %{} 'CodeEntry (:doc |)
           :code $ quote (defatom *req-handler nil)
           :examples $ []
           :schema $ :: 'Dynamic
-        |create-server! $ %{} 'CodeEntry (:doc |)
+        'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn create-server! (handler ? user-options) (reset! *req-handler handler)
               let
-                  options $ unsafe-coerce (merge default-options user-options) 'skir.schema/ServerOptions
+                  options-map $ if (map? user-options) user-options ({})
+                  port-value $ get options-map :port
+                  host-value $ get options-map :host
+                  after-start-value $ get options-map :after-start
+                  options $ %{} skir.schema/ServerOptions
+                    :port $ option:fold port-value
+                      fn () $ :port default-options
+                      fn (value)
+                        if (number? value) (unsafe-coerce value 'Number) (:port default-options)
+                    :host $ option:fold host-value
+                      fn () $ :host default-options
+                      fn (value)
+                        if (string? value) (unsafe-coerce value 'String) (:host default-options)
+                    :after-start $ option:fold after-start-value
+                      fn () $ :after-start default-options
+                      fn (value)
+                        if (fn? value) (unsafe-coerce value 'Fn) (:after-start default-options)
                   server $ http/createServer
                     fn (req res) (handle-request! req res @*req-handler)
                 .!listen server (:port options) (:host options)
@@ -210,7 +230,7 @@
                   , options
           :examples $ []
           :schema $ :: 'Dynamic
-        |default-options $ %{} 'CodeEntry (:doc |)
+        'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def default-options $ %{} skir.schema/ServerOptions (:port 4000)
               :after-start $ fn (options)
@@ -219,7 +239,7 @@
               :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
-        |handle-request! $ %{} 'CodeEntry (:doc |)
+        'handle-request! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn handle-request! (req res handler)
               try
@@ -245,7 +265,7 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |req->edn $ %{} 'CodeEntry (:doc |)
+        'req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn req->edn (req)
               let
@@ -268,12 +288,12 @@
             {} (:return 'skir.schema/Request)
               :args $ [] 'Dynamic
               :features $ #{} :js-ffi
-        |reset-req-handler! $ %{} 'CodeEntry (:doc |)
+        'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reset-req-handler! (f) (reset! *req-handler f)
           :examples $ []
           :schema $ :: 'Dynamic
-        |write-response! $ %{} 'CodeEntry (:doc |)
+        'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn write-response! (res edn-res)
               set! (.-statusCode res)
@@ -303,28 +323,29 @@
         :code $ quote
           ns skir.core $ :require (|node:http :as http) (|node:querystring :as querystring)
             skir.util :refer $ key->str promise?
-    |skir.router $ %{} 'FileEntry
+    'skir.router $ %{} 'FileEntry
       :defs $ {}
-        |expand-rule $ %{} 'CodeEntry (:doc |)
+        'expand-rule $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn expand-rule (rule-string)
-              map (.split rule-string |/)
+              map (split rule-string |/)
                 fn (x)
-                  if (.starts-with? x |:)
+                  if (starts-with? x |:)
                     turn-tag $ &str:slice x 1
                     , x
           :examples $ []
-          :schema $ :: 'Dynamic
-        |match-chunks $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'Fn
+            {} (:return 'List)
+              :args $ [] 'String
+        'match-chunks $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn match-chunks (result segments rule)
-              let
-                  result $ or result
-                    match-chunks
-                      {} (:matches? false) (:contains? false) (:rest nil)
-                        :data $ {}
-                        :message nil
-                      , segments $ expand-rule rule
+              if (nil? result)
+                recur
+                  {} (:matches? false) (:contains? false) (:rest nil)
+                    :data $ {}
+                    :message nil
+                  , segments $ expand-rule rule
                 cond
                     and (empty? segments) (empty? rule)
                     merge result $ {} (:matches? true)
@@ -333,8 +354,8 @@
                   (and (not (empty? segments)) (empty? rule))
                     merge result $ {} (:contains? true) (:result segments)
                   true $ let
-                      s0 $ first segments
-                      r0 $ first rule
+                      s0 $ option:unwrap (first segments)
+                      r0 $ option:unwrap (first rule)
                     if (tag? r0)
                       recur
                         assoc-in result ([] :data r0) s0
@@ -346,25 +367,27 @@
                           :message $ [] s0 r0
           :examples $ []
           :schema $ :: 'Dynamic
-        |match-path $ %{} 'CodeEntry (:doc |)
+        'match-path $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn match-path (real-path rule-path)
               let
-                  segments $ filter (.split real-path |/)
-                    \ not $ .blank? %
+                  segments $ filter (split real-path |/)
+                    \ not $ blank? %
                 match-chunks nil segments rule-path
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'String 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns skir.router)
-    |skir.schema $ %{} 'FileEntry
+    'skir.schema $ %{} 'FileEntry
       :defs $ {}
-        |Request $ %{} 'CodeEntry (:doc |)
+        'Request $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Request (:method 'Tag) (:url 'String) (:path 'String) (:querystring 'String) (:query 'Dynamic) (:headers 'Map) (:body 'Dynamic) (:original-request 'Dynamic)
           :examples $ []
           :schema $ :: 'Enum
-        |Response $ %{} 'CodeEntry (:doc |)
+        'Response $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Response (:code 'Number)
               :message $ :: 'Option 'String
@@ -372,12 +395,12 @@
               :body 'Dynamic
           :examples $ []
           :schema $ :: 'Enum
-        |ServerOptions $ %{} 'CodeEntry (:doc |)
+        'ServerOptions $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct ServerOptions (:port 'Number) (:after-start 'Fn) (:host 'String)
           :examples $ []
           :schema $ :: 'Enum
-        |request $ %{} 'CodeEntry (:doc |)
+        'request $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def request $ %{} skir.schema/Request (:method :get) (:url |) (:path |) (:querystring |)
               :query $ {}
@@ -386,7 +409,7 @@
               :original-request nil
           :examples $ []
           :schema $ :: 'skir.schema/Request
-        |response $ %{} 'CodeEntry (:doc |)
+        'response $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def response $ %{} skir.schema/Response (:code 200) (:message %none)
               :headers $ {}
@@ -395,15 +418,15 @@
           :schema $ :: 'skir.schema/Response
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns skir.schema)
-    |skir.util $ %{} 'FileEntry
+    'skir.util $ %{} 'FileEntry
       :defs $ {}
-        |clear! $ %{} 'CodeEntry (:doc |)
+        'clear! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn clear! () (.clear js/console)
               ; -> js/process .-stdout $ .write (read-string "|\"\\033c\"")
           :examples $ []
           :schema $ :: 'Dynamic
-        |collect-body-str $ %{} 'CodeEntry (:doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction")
+        'collect-body-str $ %{} 'CodeEntry (:doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction")
           :code $ quote
             defn collect-body-str (request ? cb)
               new js/Promise $ fn (resolve reject)
@@ -424,13 +447,13 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |delay! $ %{} 'CodeEntry (:doc |)
+        'delay! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn delay! (duration task)
               js/setTimeout task $ * 1000 duration
           :examples $ []
           :schema $ :: 'Dynamic
-        |key->str $ %{} 'CodeEntry (:doc |)
+        'key->str $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn key->str (v)
               cond
@@ -442,7 +465,7 @@
                 true $ str v
           :examples $ []
           :schema $ :: 'Dynamic
-        |promise? $ %{} 'CodeEntry (:doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
+        'promise? $ %{} 'CodeEntry (:doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise")
           :code $ quote
             defn promise? (x)
               and
