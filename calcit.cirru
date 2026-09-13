@@ -33,9 +33,7 @@
             do (; println)
               ; println |Requests: $ to-lispy-string req
               ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
-              ; js/console.log
-                :original-request req
-                , res
+              ; js/console.log (:original-request req) res
               let
                   router $ parse-address (:url req) router-rules
                   page $ option:unwrap-or
@@ -78,8 +76,7 @@
                         :body :effect
                   (:body)
                     fn (cb)
-                      match
-                        :original-request req
+                      match (:original-request req)
                         (:some raw-request)
                           collect-body-str raw-request $ %some $ fn (body) (println |BODY: body)
                             cb $ {} (:code 200)
@@ -93,8 +90,7 @@
                     {} $ :body |error
                   (:throw-error) (raise "|Custom error")
                   (:404 paths)
-                    {} (:code 404)
-                      :message "|No matched route"
+                    {} (:code 404) (:message "|No matched route")
                       :headers $ {}
                       :body $ str paths
                   _ $ {} (:code 404) (:message "|Page not found")
@@ -228,8 +224,7 @@
           :examples $ []
           :schema $ :: 'Ref $ :: 'Option 'DynFn
         'create-server! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn create-server! (handler user-options)
-            reset-req-handler! handler
+          :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
                 options-map $ match user-options
                   (:some value) value
@@ -265,9 +260,7 @@
                             :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
                             :return 'Dynamic
                       (:none)
-                        do (js-set res :status-code 503)
-                          res .end |No-request-handler
-                          , &unit
+                        do (js-set res :status-code 503) (res .end |No-request-handler) &unit
                 server $ unsafe-coerce raw-server 'skir.schema/NodeServerHost
               .!listen server (:port options) (:host options)
                 fn () $
@@ -275,8 +268,7 @@
                   , options
               , server
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'skir.schema/NodeServerHost
+          :schema $ :: 'Fn $ {} (:return 'skir.schema/NodeServerHost)
             :args $ []
               :: 'Fn $ {} (:return 'Dynamic)
                 :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
@@ -286,8 +278,7 @@
           :code $ quote $ def default-options
             %{} skir.schema/ServerOptions (:port 4000)
               :after-start $ fn (options)
-                println $ str "|Server listening on " $ :port
-                  unsafe-coerce options 'skir.schema/ServerOptions
+                println $ str "|Server listening on " $ :port (unsafe-coerce options 'skir.schema/ServerOptions)
               :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
@@ -319,8 +310,7 @@
                       , &unit
                   (and (tag? response) (= response :effect))
                     , &unit
-                  true $ do (println |Response: response)
-                    raise "|Unknown response!"
+                  true $ do (println |Response: response) (raise "|Unknown response!")
               fn (err) (js/console.error err) (js-set res :status-code 500) (js-set res :status-message "|Server Error")
                 res .end $ str (to-lispy-string err) &newline &newline
                 , &unit
@@ -363,8 +353,7 @@
                 :body $ %none
                 :original-request $ %some req
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'skir.schema/Request
+          :schema $ :: 'Fn $ {} (:return 'skir.schema/Request)
             :args $ [] 'skir.schema/NodeRequestHost
             :features $ #{} :js-ffi
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
@@ -393,8 +382,7 @@
                 (nil? body) |
                 (string? body) body
                 (tag? body) (to-lispy-string body)
-                (js/Array.isArray body)
-                  js/JSON.stringify body
+                (js/Array.isArray body) (js/JSON.stringify body)
                 true $ js/JSON.stringify body
             , &unit
           :examples $ []
@@ -403,8 +391,7 @@
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.core
-          :require (|node:http :as http)
-            |node:querystring :as querystring
+          :require (|node:http :as http) (|node:querystring :as querystring)
             skir.util :refer $ key->str promise?
     'skir.router $ %{} 'FileEntry
       :defs $ {}
@@ -465,10 +452,8 @@
                       recur result (rest segments) (rest rule)
                       struct-with result $ :message $ %some ([] segment expected)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'skir.router/MatchResult
-            :args $ [] 'skir.router/MatchResult (:: 'List 'String)
-              :: 'List 'skir.router/RoutePart
+          :schema $ :: 'Fn $ {} (:return 'skir.router/MatchResult)
+            :args $ [] 'skir.router/MatchResult (:: 'List 'String) (:: 'List 'skir.router/RoutePart)
         'match-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn match-path (real-path rule-path)
             let
@@ -482,19 +467,16 @@
                   :message $ %none
               match-chunks initial segments $ expand-rule rule-path
           :examples $ [] $ quote (match-path |/users/42 |users/:id)
-          :schema $ :: 'Fn $ {}
-            :return 'skir.router/MatchResult
+          :schema $ :: 'Fn $ {} (:return 'skir.router/MatchResult)
             :args $ [] 'String 'String
           :tests $ []
-            %{} 'TestEntry
-              :name |matches-parameter
+            %{} 'TestEntry (:name |matches-parameter)
               :code $ quote $ let
                   result $ match-path |/users/42 |users/:id
                 assert= true $ :matches? result
                 assert= (%some |42)
                   get (:data result) :id
-            %{} 'TestEntry
-              :name |reports-mismatch
+            %{} 'TestEntry (:name |reports-mismatch)
               :code $ quote $ let
                   result $ match-path |/users |posts
                 assert= false $ :matches? result
@@ -664,8 +646,7 @@
                       resolve text
               unsafe-coerce raw-promise 'skir.schema/NodePromiseHost
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'skir.schema/NodePromiseHost
+          :schema $ :: 'Fn $ {} (:return 'skir.schema/NodePromiseHost)
             :args $ [] 'skir.schema/NodeRequestHost $ :: 'Option
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'String

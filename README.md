@@ -36,8 +36,7 @@ cond
   (promise? response)
     .then response $ fn (result) (write-response! res result)
   (= response :effect) (comment "Done with effect")
-  true $ do (println |Response: response)
-    raise "|Unrecognized response!"
+  true $ do (println |Response: response) (raise "|Unrecognized response!")
 ```
 
 ### Origin
