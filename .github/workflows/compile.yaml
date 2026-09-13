@@ -40,10 +40,19 @@ jobs:
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
         calcit calcit.cirru --check-only
-        # The two remaining dynamic calls are Node.js response event listeners.
-        calcit calcit.cirru analyze dynamic-methods --max 2
-        calcit calcit.cirru analyze deprecated
+        calcit calcit.cirru analyze check-public --ns skir.schema --ns skir.router --ns skir.core --ns skir.client --ns skir.util --summary-only --format json
+        calcit calcit.cirru analyze dynamic-methods --max 0
+        calcit calcit.cirru analyze deprecated --summary-only --format json
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
+    - name: Test router behavior and documentation
+      run: |
+        calcit calcit.cirru test skir.router/match-path --require-match --summary-only --format json
+        calcit calcit.cirru analyze check-examples --ns skir.router
+        calcit calcit.cirru docs format-md README.md --check
+        calcit calcit.cirru docs check-md README.md --failures-only
+
     - name: Compile to JavaScript
-      run: calcit calcit.cirru js
+      run: |
+        calcit calcit.cirru js
+        node tests/router-js.mjs
