@@ -14,13 +14,13 @@ ns demo $ :require (skir.core :as skir) (skir.schema :as schema)
 let
     on-request! $ fn (req-edn res)
       hint-fn $ {}
-        :args $ [] 'skir.schema/Request 'skir.schema/NodeResponseHost
+        :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
         :return 'Dynamic
       {} (:code 200) (:message |OK)
         :headers $ {} $ :Content-Type |application/cirru-edn
         :body $ {} $ :message "|Hello World!"
   ; "create server"
-  skir/create-server! on-request!
+  skir/create-server! on-request! $ %none
   ; "handle on reload"
   skir/reset-req-handler! on-request!
 ```
