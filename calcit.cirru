@@ -29,73 +29,72 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
         'render! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render! (req res)
-            do (; println)
-              ; println |Requests: $ to-lispy-string req
-              ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
-              ; js/console.log (:original-request req) res
-              let
-                  router $ parse-address (:url req) router-rules
-                  page $ option:unwrap-or
-                    get-in router $ [] :path
-                    []
-                  route $ option:unwrap-or (nth page 0)
-                    :: :404 $ []
-                  parse-result $ match-path (:url req) |a/:b
-                ; println |Parsed: router parse-result page
-                println |Route: route
-                match route
-                  (:callback)
-                    fn (send!)
-                      delay! 3 $ fn () $ send!
-                        {} (:code 200)
-                          :headers $ {}
-                          :body "|slow response finished!"
-                  (:json)
-                    {} (:code 200)
-                      :headers $ {} $ :Content-Type :application/json
-                      :body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
-                  (:edn)
-                    {} (:code 200)
-                      :headers $ {} $ :Content-Type :application/edn
-                      :body $ format-cirru-edn $ {} (:status :ok) (:message |good)
-                  (:html)
-                    {} (:code 200)
-                      :headers $ {} $ :Content-Type :text/html
-                      :body "|<div><h2>Heading</h2> this is HTML</div>"
-                  (:promise)
-                    new js/Promise $ fn (resolve reject)
-                      delay! 3 $ fn () $ resolve
-                        {} (:code 200)
-                          :headers $ {}
-                          :body "|Message from promise"
-                  (:effect)
-                    do (println |effect)
-                      {} (:code 202)
+          :code $ quote $ defn render! (req res) (; println)
+            ; println |Requests: $ to-lispy-string req
+            ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
+            ; js/console.log (:original-request req) res
+            let
+                router $ parse-address (:url req) router-rules
+                page $ option:unwrap-or
+                  get-in router $ [] :path
+                  []
+                route $ option:unwrap-or (nth page 0)
+                  :: :404 $ []
+                parse-result $ match-path (:url req) |a/:b
+              ; println |Parsed: router parse-result page
+              println |Route: route
+              match route
+                (:callback)
+                  fn (send!)
+                    delay! 3 $ fn () $ send!
+                      {} (:code 200)
                         :headers $ {}
-                        :body :effect
-                  (:body)
-                    fn (cb)
-                      match (:original-request req)
-                        (:some raw-request)
-                          collect-body-str raw-request $ %some $ fn (body) (println |BODY: body)
-                            cb $ {} (:code 200)
-                              :headers $ {}
-                              :body :body
-                        (:none)
-                          cb $ {} (:code 400)
-                            :headers $ {}
-                            :body "|Missing request body source"
-                  (:error)
-                    {} $ :body |error
-                  (:throw-error) (raise "|Custom error")
-                  (:404 paths)
-                    {} (:code 404) (:message "|No matched route")
+                        :body "|slow response finished!"
+                (:json)
+                  {} (:code 200)
+                    :headers $ {} $ :Content-Type :application/json
+                    :body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
+                (:edn)
+                  {} (:code 200)
+                    :headers $ {} $ :Content-Type :application/edn
+                    :body $ format-cirru-edn $ {} (:status :ok) (:message |good)
+                (:html)
+                  {} (:code 200)
+                    :headers $ {} $ :Content-Type :text/html
+                    :body "|<div><h2>Heading</h2> this is HTML</div>"
+                (:promise)
+                  new js/Promise $ fn (resolve reject)
+                    delay! 3 $ fn () $ resolve
+                      {} (:code 200)
+                        :headers $ {}
+                        :body "|Message from promise"
+                (:effect)
+                  do (println |effect)
+                    {} (:code 202)
                       :headers $ {}
-                      :body $ str paths
-                  _ $ {} (:code 404) (:message "|Page not found")
+                      :body :effect
+                (:body)
+                  fn (cb)
+                    match (:original-request req)
+                      (:some raw-request)
+                        collect-body-str raw-request $ %some $ fn (body) (println |BODY: body)
+                          cb $ {} (:code 200)
+                            :headers $ {}
+                            :body :body
+                      (:none)
+                        cb $ {} (:code 400)
+                          :headers $ {}
+                          :body "|Missing request body source"
+                (:error)
+                  {} $ :body |error
+                (:throw-error) (raise "|Custom error")
+                (:404 paths)
+                  {} (:code 404) (:message "|No matched route")
                     :headers $ {}
-                    :body $ str "|404 page for " $ to-lispy-string page
+                    :body $ str paths
+                _ $ {} (:code 404) (:message "|Page not found")
+                  :headers $ {}
+                  :body $ str "|404 page for " $ to-lispy-string page
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
@@ -182,19 +181,19 @@
                       headers $ unsafe-coerce (.-headers res) 'skir.schema/NodeHeadersHost
                       content-type $ js-nullish->option $ .-content-type headers
                     collect-response-data! res $ fn (text)
-                      cb $ %{} skir.schema/Response
-                        :code $
-                          js-nullish->option $ .-status-code res
+                      cb $ skir.schema/Response :code
+                        (js-nullish->option (.-status-code res))
                           , .unwrap-or 0
-                        :message $ js-nullish->option $ .-status-message res
-                        :headers $ {}
-                        :body $ %some $ match content-type
-                          (:some kind)
-                            case-default kind text
-                              |application/edn $ raise "|Does not handle EDN"
-                              |application/cirru-edn $ parse-cirru-edn text
-                              |application/json $ js/JSON.parse text
-                          (:none) text
+                        , :message
+                          js-nullish->option $ .-status-message res
+                          , :headers ({}) :body $ %some
+                            match content-type
+                              (:some kind)
+                                case-default kind text
+                                  |application/edn $ raise "|Does not handle EDN"
+                                  |application/cirru-edn $ parse-cirru-edn text
+                                  |application/json $ js/JSON.parse text
+                              (:none) text
               unsafe-coerce raw-request 'JsObject
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'JsObject)
@@ -222,7 +221,7 @@
         '*req-handler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *req-handler (%none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Option 'DynFn
+          :schema $ :: 'Ref $ :: 'calcit.core/Option 'DynFn
         'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
@@ -232,23 +231,24 @@
                 port-value $ get options-map :port
                 host-value $ get options-map :host
                 after-start-value $ get options-map :after-start
-                options $ %{} skir.schema/ServerOptions
-                  :port $ option:fold port-value
+                options $ skir.schema/ServerOptions :port
+                  option:fold port-value
                     fn () $ :port default-options
                     fn (value)
                       if (number? value) value $ :port default-options
-                  :host $ option:fold host-value
-                    fn () $ :host default-options
-                    fn (value)
-                      if (string? value) value $ :host default-options
-                  :after-start $ option:fold after-start-value
-                    fn () $ :after-start default-options
-                    fn (value)
-                      if (fn? value)
-                        unsafe-coerce value $ :: 'Fn $ {}
-                          :args $ [] 'skir.schema/ServerOptions
-                          :return 'Unit
-                        :after-start default-options
+                  , :host
+                    option:fold host-value
+                      fn () $ :host default-options
+                      fn (value)
+                        if (string? value) value $ :host default-options
+                    , :after-start $ option:fold after-start-value
+                      fn () $ :after-start default-options
+                      fn (value)
+                        if (fn? value)
+                          unsafe-coerce value $ :: 'Fn $ {}
+                            :args $ [] 'skir.schema/ServerOptions
+                            :return 'Unit
+                          :after-start default-options
                 raw-server $ http/createServer $ fn (raw-req raw-res)
                   let
                       req $ unsafe-coerce raw-req 'skir.schema/NodeRequestHost
@@ -272,14 +272,14 @@
             :args $ []
               :: 'Fn $ {} (:return 'Dynamic)
                 :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
-              :: 'Option $ :: 'Map 'Tag 'Dynamic
+              :: 'calcit.core/Option $ :: 'Map 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
-            %{} skir.schema/ServerOptions (:port 4000)
-              :after-start $ fn (options)
+            skir.schema/ServerOptions :port 4000 :after-start
+              fn (options)
                 println $ str "|Server listening on " $ :port (unsafe-coerce options 'skir.schema/ServerOptions)
-              :host |0.0.0.0
+              , :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
         'handle-request! $ %{} 'CodeEntry (:doc |)
@@ -341,17 +341,11 @@
                 header-data $ unsafe-coerce
                   to-calcit-data $ .-headers req
                   :: 'Map 'String 'Dynamic
-              %{} skir.schema/Request
-                :method $ case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
-                :url url
-                :path $
-                  nth url-pieces 0
-                  , .unwrap-or |
-                :querystring querystring
-                :query query-data
-                :headers header-data
-                :body $ %none
-                :original-request $ %some req
+              skir.schema/Request :method
+                case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
+                , :url url :path
+                  (nth url-pieces 0) .unwrap-or |
+                  , :querystring querystring :query query-data :headers header-data :body (%none) :original-request $ %some req
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.schema/Request)
             :args $ [] 'skir.schema/NodeRequestHost
@@ -418,8 +412,8 @@
             map (split rule-string |/)
               fn (part)
                 if (starts-with? part |:)
-                  %:: RoutePart :parameter $ turn-tag $ &str:slice part 1
-                  %:: RoutePart :literal part
+                  RoutePart :parameter $ turn-tag $ &str:slice part 1
+                  RoutePart :literal part
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'String
@@ -430,10 +424,10 @@
                 and (empty? segments) (empty? rule)
                 struct-with result $ :matches? true
               (and (empty? segments) (not (empty? rule)))
-                struct-with result $ :result $ %some (%:: RouteRemainder :rule rule)
+                struct-with result $ :result $ %some (RouteRemainder :rule rule)
               (and (not (empty? segments)) (empty? rule))
                 struct-with result (:contains? true)
-                  :result $ %some $ %:: RouteRemainder :path segments
+                  :result $ %some $ RouteRemainder :path segments
               true $ let
                   segment $
                     first segments
@@ -460,11 +454,7 @@
                 segments $ filter (split real-path |/)
                   fn (segment)
                     not $ blank? segment
-                initial $ %{} MatchResult (:matches? false) (:contains? false)
-                  :rest $ %none
-                  :data $ {}
-                  :result $ %none
-                  :message $ %none
+                initial $ MatchResult :matches? false :contains? false :rest (%none) :data ({}) :result (%none) :message $ %none
               match-chunks initial segments $ expand-rule rule-path
           :examples $ [] $ quote (match-path |/users/42 |users/:id)
           :schema $ :: 'Fn $ {} (:return 'skir.router/MatchResult)
@@ -600,19 +590,12 @@
           :schema $ :: 'Enum
         'request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def request
-            %{} Request (:method :get) (:url |) (:path |) (:querystring |)
-              :query $ {}
-              :headers $ {}
-              :body $ %none
-              :original-request $ %none
+            Request :method :get :url | :path | :querystring | :query ({}) :headers ({}) :body (%none) :original-request $ %none
           :examples $ []
           :schema $ :: 'skir.schema/Request
         'response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def response
-            %{} Response (:code 200)
-              :message $ %none
-              :headers $ {}
-              :body $ %none
+            Response :code 200 :message (%none) :headers ({}) :body $ %none
           :examples $ []
           :schema $ :: 'skir.schema/Response
       :ns $ %{} 'NsEntry (:doc |)
@@ -647,7 +630,7 @@
               unsafe-coerce raw-promise 'skir.schema/NodePromiseHost
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.schema/NodePromiseHost)
-            :args $ [] 'skir.schema/NodeRequestHost $ :: 'Option
+            :args $ [] 'skir.schema/NodeRequestHost $ :: 'calcit.core/Option
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'String
             :features $ #{} :js-ffi
