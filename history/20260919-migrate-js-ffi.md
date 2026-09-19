@@ -11,13 +11,23 @@
     `js-ffi.node/response-body-text` / `response-header`.
   - `http/createServer` + `.!listen` -> `js-ffi.node/http-create-server` /
     `server-listen!`.
-  - `node:querystring` -> `js-ffi.node/search-params->map` over
-    `js-ffi.node/search-params-create`.
+  - `node:querystring` -> `skir.core/query-params->map` over
+    `js-ffi.shared/search-params-create` and `UrlSearchParamsHost.for-each!`.
   - `new js/Promise` / `js/Buffer` body collection -> `js-ffi.node/request-body-text`.
   - `js/setTimeout` -> `js-ffi.node/set-timeout!`; `console.clear` ->
     `js-ffi.shared/console-clear!`; local `promise?` -> `js-ffi.shared/promise?`.
 - `skir.schema/Request` now stores `:headers` as `JsObject` and `:original-request` as
   `Option<js-ffi.node/NodeRequestHost>`.
+- Contract notes:
+  - `skir.client/get!` and `fetch!` keep returning the opaque `JsObject` client request
+    (the same value the old `http/get` returned), so this is not a return-type change.
+  - `req->edn` builds `:query` with `skir.core/query-params->map`, so repeated keys
+    (`tag=a&tag=b`) stay a list instead of being overwritten like the old
+    `node:querystring` path did.
+  - Use `(js-ffi.node :as node)` / `(js-ffi.shared :as shared)` namespace imports; a leading
+    `|` would emit a bare JS module specifier and fail to resolve.
 - Verified with `caps --strict --ci`, both entries `--check-only`, public-definition
   analysis, `dynamic-methods --max 0`, deprecated/quality baselines, router tests, Markdown
-  docs checks, JS generation and `node tests/router-js.mjs`.
+  docs checks, JS generation and `node tests/router-js.mjs`. The compiled server was run
+  locally and `/json`, `/html`, `/promise`, `/callback`, `/body` (POST) and `/effect`
+  routes were exercised.

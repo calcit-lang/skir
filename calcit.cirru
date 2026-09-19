@@ -63,7 +63,7 @@
                     :headers $ {} $ :Content-Type :text/html
                     :body "|<div><h2>Heading</h2> this is HTML</div>"
                 (:promise)
-                  shared/promise-create $ fn (resolve reject)
+                  promise-create $ fn (resolve reject)
                     delay! 3 $ fn () $ resolve
                       {} (:code 200)
                         :headers $ {}
@@ -135,9 +135,9 @@
             :args $ []
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.app.main
-          :require (skir.core :as skir) (skir.schema :as schema) (|js-ffi.shared :as shared)
+          :require (skir.core :as skir) (skir.schema :as schema) (js-ffi.shared :as shared)
             skir.client :refer $ fetch!
-            skir.util :refer $ clear! delay! collect-body-str
+            skir.util :refer $ clear! delay! collect-body-str promise-create
             respo-router.parser :refer $ parse-address
             |fs :as fs
             |path :as path
@@ -162,7 +162,7 @@
           :code $ quote $ defn fetch! (url cb)
             get! url ({}) cb
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
             :args $ [] 'String $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'skir.schema/Response
@@ -185,9 +185,8 @@
                               |application/cirru-edn $ parse-cirru-edn text
                               |application/json $ js/JSON.parse text
                           (:none) text
-            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
             :args $ [] 'String (:: 'Map 'Tag 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'skir.schema/Response
@@ -206,7 +205,7 @@
             :generics $ [] 'Body 'Options 'Callback
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.client
-          :require $ |js-ffi.node :as node
+          :require $ js-ffi.node :as node
     'skir.core $ %{} 'FileEntry
       :defs $ {}
         '*req-handler $ %{} 'CodeEntry (:doc |)
@@ -252,7 +251,7 @@
               do
                 node/server-listen! raw-server (:port options) (:host options)
                   fn () $ :after-start options
-                raw-server
+                , raw-server
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.node/NodeServerHost)
             :args $ []
@@ -288,9 +287,12 @@
                             :return 'Unit
                       callback-handler $ fn (response-data) (write-response! res response-data)
                   (shared/promise? response)
-                    shared/promise-observe! response
-                      fn (result) (write-response! res result)
-                      fn (err) (js/console.error err) (raise err)
+                    let
+                        promise $ unsafe-coerce response 'js-ffi.shared/PromiseHost
+                      do
+                        promise .then! $ fn (result) (write-response! res result)
+                        promise .catch! $ fn (err) (js/console.error err) (raise err)
+                        , &unit
                   (and (tag? response) (= response :effect))
                     , &unit
                   true $ do (println |Response: response) (raise "|Unknown response!")
@@ -303,6 +305,21 @@
               {} (:return 'Dynamic)
                 :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
             :features $ #{} :js-ffi
+        'query-params->map $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn query-params->map (value)
+            let
+                result $ atom $ {}
+              do
+                value .for-each! $ fn (item key _parent)
+                  swap! result assoc key $ let
+                      current $ &map:get (deref result) key
+                    if (nil? current) item $ if (list? current) (append current item) ([] current item)
+                deref result
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'js-ffi.shared/UrlSearchParamsHost
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'String 'Dynamic
         'req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn req->edn (req)
             let
@@ -316,9 +333,7 @@
                   to-calcit-data $ .!split url |?
                   :: 'List 'String
                 querystring $ option:unwrap-or (nth url-pieces 1) |
-                query-data $ unsafe-coerce
-                  to-calcit-data $ node/search-params->map $ node/search-params-create querystring
-                  :: 'Map 'String 'Dynamic
+                query-data $ query-params->map $ shared/search-params-create querystring
               skir.schema/Request :method
                 case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
                 , :url url :path
@@ -363,7 +378,7 @@
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.core
-          :require (|js-ffi.node :as node) (|js-ffi.shared :as shared)
+          :require (js-ffi.node :as node) (js-ffi.shared :as shared)
             skir.util :refer $ key->str
     'skir.router $ %{} 'FileEntry
       :defs $ {}
@@ -506,7 +521,7 @@
             :features $ #{} :js-ffi
         'delay! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn delay! (duration task)
-            node/set-timeout! (unsafe-coerce task 'DynFn) (* 1000 duration)
+            node/set-timeout! task $ * 1000 duration
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -527,6 +542,14 @@
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'T
             :generics $ [] 'T
+        'promise-create $ %{} 'CodeEntry
+          :doc "|Create a PromiseHost from a typed (resolve reject) executor."
+          :code $ quote $ defn promise-create (executor)
+            shared/promise-create $ unsafe-coerce executor 'DynFn
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'js-ffi.shared/PromiseHost)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'promise? $ %{} 'CodeEntry
           :doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise"
           :code $ quote $ defn promise? (x) (shared/promise? x)
@@ -536,4 +559,4 @@
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.util
-          :require (|js-ffi.node :as node) (|js-ffi.shared :as shared)
+          :require (js-ffi.node :as node) (js-ffi.shared :as shared)
