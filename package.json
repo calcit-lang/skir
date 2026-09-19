@@ -1,12 +1,12 @@
 {
   "name": "skir",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "main": "index.js",
   "packageManager": "yarn@4.12.0",
   "repository": "git@github.com:calcit-lang/skir.git",
   "author": "jiyinyiyong",
   "license": "MIT",
   "dependencies": {
-    "@calcit/procs": "0.15.3"
+    "@calcit/procs": "0.17.1"
   }
 }
