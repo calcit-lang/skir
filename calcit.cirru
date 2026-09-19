@@ -10,7 +10,7 @@
       :reload-fn 'skir.app.main/reload!
       :target :node
       :feature-policy $ {}
-      :modules $ [] |respo-router.calcit/
+      :modules $ [] |respo-router.calcit/ |js-ffi/
       :type-slots $ {}
   :files $ {}
     'skir.app.main $ %{} 'FileEntry
@@ -63,7 +63,7 @@
                     :headers $ {} $ :Content-Type :text/html
                     :body "|<div><h2>Heading</h2> this is HTML</div>"
                 (:promise)
-                  new js/Promise $ fn (resolve reject)
+                  shared/promise-create $ fn (resolve reject)
                     delay! 3 $ fn () $ resolve
                       {} (:code 200)
                         :headers $ {}
@@ -97,7 +97,7 @@
                   :body $ str "|404 page for " $ to-lispy-string page
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
+            :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
             :features $ #{} :js-ffi
         'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router-rules
@@ -135,7 +135,7 @@
             :args $ []
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.app.main
-          :require (skir.core :as skir) (skir.schema :as schema)
+          :require (skir.core :as skir) (skir.schema :as schema) (|js-ffi.shared :as shared)
             skir.client :refer $ fetch!
             skir.util :refer $ clear! delay! collect-body-str
             respo-router.parser :refer $ parse-address
@@ -145,16 +145,10 @@
     'skir.client $ %{} 'FileEntry
       :defs $ {}
         'collect-response-data! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn collect-response-data! (res cb!)
-            let
-                chunks $ unsafe-coerce (js-array) 'skir.schema/NodeChunkListHost
-              res .set-encoding |utf8
-              res .on |data $ fn (chunk) (chunks .push chunk) &unit
-              res .on |end $ fn () $ cb! (chunks .join |)
-              , &unit
+          :code $ quote $ defn collect-response-data! (res cb!) (node/response-body-text res cb!) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'skir.schema/NodeIncomingResponseHost $ :: 'Fn
+            :args $ [] 'js-ffi.node/NodeIncomingResponseHost $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'String
             :features $ #{} :js-ffi
@@ -168,35 +162,32 @@
           :code $ quote $ defn fetch! (url cb)
             get! url ({}) cb
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
+          :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'String $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'skir.schema/Response
         'get! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get! (url options cb)
-            let
-                raw-request $ http/get url $ fn (raw-response)
-                  let
-                      res $ unsafe-coerce raw-response 'skir.schema/NodeIncomingResponseHost
-                      headers $ unsafe-coerce (.-headers res) 'skir.schema/NodeHeadersHost
-                      content-type $ js-nullish->option $ .-content-type headers
-                    collect-response-data! res $ fn (text)
-                      cb $ skir.schema/Response :code
-                        (js-nullish->option (.-status-code res))
-                          , .unwrap-or 0
-                        , :message
-                          js-nullish->option $ .-status-message res
-                          , :headers ({}) :body $ %some
-                            match content-type
-                              (:some kind)
-                                case-default kind text
-                                  |application/edn $ raise "|Does not handle EDN"
-                                  |application/cirru-edn $ parse-cirru-edn text
-                                  |application/json $ js/JSON.parse text
-                              (:none) text
-              unsafe-coerce raw-request 'JsObject
+            node/http-get! url $ fn (res)
+              node/response-body-text res $ fn (text)
+                let
+                    content-type $ node/response-header res |content-type
+                    status-code $ .-status-code res
+                  cb $ skir.schema/Response :code
+                    if (js-nullish? status-code) 0 $ unsafe-coerce status-code 'Number
+                    , :message
+                      js-nullish->option $ .-status-message res
+                      , :headers ({}) :body $ %some
+                        match content-type
+                          (:some kind)
+                            case-default kind text
+                              |application/edn $ raise "|Does not handle EDN"
+                              |application/cirru-edn $ parse-cirru-edn text
+                              |application/json $ js/JSON.parse text
+                          (:none) text
+            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
+          :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'String (:: 'Map 'Tag 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'skir.schema/Response
@@ -215,7 +206,7 @@
             :generics $ [] 'Body 'Options 'Callback
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.client
-          :require $ |http :as http
+          :require $ |js-ffi.node :as node
     'skir.core $ %{} 'FileEntry
       :defs $ {}
         '*req-handler $ %{} 'CodeEntry (:doc |)
@@ -249,29 +240,24 @@
                             :args $ [] 'skir.schema/ServerOptions
                             :return 'Unit
                           :after-start default-options
-                raw-server $ http/createServer $ fn (raw-req raw-res)
-                  let
-                      req $ unsafe-coerce raw-req 'skir.schema/NodeRequestHost
-                      res $ unsafe-coerce raw-res 'skir.schema/NodeServerResponseHost
-                    match @*req-handler
-                      (:some active-handler)
-                        handle-request! req res $ unsafe-coerce active-handler $ :: 'Fn
-                          {}
-                            :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
-                            :return 'Dynamic
-                      (:none)
-                        do (js-set res :status-code 503) (res .end |No-request-handler) &unit
-                server $ unsafe-coerce raw-server 'skir.schema/NodeServerHost
-              .!listen server (:port options) (:host options)
-                fn () $
-                  :after-start options
-                  , options
-              , server
+                raw-server $ node/http-create-server $ fn (req res)
+                  match @*req-handler
+                    (:some active-handler)
+                      handle-request! req res $ unsafe-coerce active-handler $ :: 'Fn
+                        {}
+                          :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
+                          :return 'Dynamic
+                    (:none)
+                      write-response! res $ {} (:code 503) (:body |No-request-handler)
+              do
+                node/server-listen! raw-server (:port options) (:host options)
+                  fn () $ :after-start options
+                raw-server
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'skir.schema/NodeServerHost)
+          :schema $ :: 'Fn $ {} (:return 'js-ffi.node/NodeServerHost)
             :args $ []
               :: 'Fn $ {} (:return 'Dynamic)
-                :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
+                :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
               :: 'calcit.core/Option $ :: 'Map 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'default-options $ %{} 'CodeEntry (:doc |)
@@ -301,54 +287,46 @@
                                 :return 'Unit
                             :return 'Unit
                       callback-handler $ fn (response-data) (write-response! res response-data)
-                  (promise? response)
-                    let
-                        promise $ unsafe-coerce response 'skir.schema/NodePromiseHost
-                      promise .then $ unsafe-coerce
-                        fn (result) (write-response! res result)
-                        , 'DynFn
-                      , &unit
+                  (shared/promise? response)
+                    shared/promise-observe! response
+                      fn (result) (write-response! res result)
+                      fn (err) (js/console.error err) (raise err)
                   (and (tag? response) (= response :effect))
                     , &unit
                   true $ do (println |Response: response) (raise "|Unknown response!")
               fn (err) (js/console.error err) (js-set res :status-code 500) (js-set res :status-message "|Server Error")
-                res .end $ str (to-lispy-string err) &newline &newline
+                res .end! $ str (to-lispy-string err) &newline &newline
                 , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'skir.schema/NodeRequestHost 'skir.schema/NodeServerResponseHost $ :: 'Fn
+            :args $ [] 'js-ffi.node/NodeRequestHost 'js-ffi.node/NodeServerResponseHost $ :: 'Fn
               {} (:return 'Dynamic)
-                :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
+                :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
             :features $ #{} :js-ffi
         'req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn req->edn (req)
             let
-                url $
+                url $ option:unwrap-or
                   js-nullish->option $ .-url req
-                  , .unwrap-or |
-                method-text $
+                  , |
+                method-text $ option:unwrap-or
                   js-nullish->option $ .-method req
-                  , .unwrap-or |GET
+                  , |GET
                 url-pieces $ unsafe-coerce
                   to-calcit-data $ .!split url |?
                   :: 'List 'String
-                querystring $
-                  nth url-pieces 1
-                  , .unwrap-or |
+                querystring $ option:unwrap-or (nth url-pieces 1) |
                 query-data $ unsafe-coerce
-                  to-calcit-data $ querystring/parse querystring
-                  :: 'Map 'String 'Dynamic
-                header-data $ unsafe-coerce
-                  to-calcit-data $ .-headers req
+                  to-calcit-data $ node/search-params->map $ node/search-params-create querystring
                   :: 'Map 'String 'Dynamic
               skir.schema/Request :method
                 case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
                 , :url url :path
-                  (nth url-pieces 0) .unwrap-or |
-                  , :querystring querystring :query query-data :headers header-data :body (%none) :original-request $ %some req
+                  option:unwrap-or (nth url-pieces 0) |
+                  , :querystring querystring :query query-data :headers (.-headers req) :body (%none) :original-request $ %some req
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.schema/Request)
-            :args $ [] 'skir.schema/NodeRequestHost
+            :args $ [] 'js-ffi.node/NodeRequestHost
             :features $ #{} :js-ffi
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
@@ -358,7 +336,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'Fn
               {} (:return 'Dynamic)
-                :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
+                :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
             :features $ #{} :js-ffi
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
@@ -366,8 +344,8 @@
             js-set res :status-message $ either (&map:get edn-res :message) |OK
             &doseq
               pair $ either (&map:get edn-res :headers) ({})
-              let[] (key value) pair $ res .set-header (key->str key) (key->str value)
-            res .end $ let
+              let[] (key value) pair $ res .set-header! (key->str key) (key->str value)
+            res .end! $ let
                 body $ &map:get edn-res :body
               cond
                   list? body
@@ -381,12 +359,12 @@
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'skir.schema/NodeServerResponseHost 'Dynamic
+            :args $ [] 'js-ffi.node/NodeServerResponseHost 'Dynamic
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.core
-          :require (|node:http :as http) (|node:querystring :as querystring)
-            skir.util :refer $ key->str promise?
+          :require (|js-ffi.node :as node) (|js-ffi.shared :as shared)
+            skir.util :refer $ key->str
     'skir.router $ %{} 'FileEntry
       :defs $ {}
         'MatchResult $ %{} 'CodeEntry (:doc |)
@@ -477,104 +455,12 @@
         :code $ quote $ ns skir.router
     'skir.schema $ %{} 'FileEntry
       :defs $ {}
-        'NodeBufferClassHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeBufferClassHost
-            .concat $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeBufferClassHost 'skir.schema/NodeChunkListHost
-              :return 'skir.schema/NodeBufferHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-          :schema $ :: 'Trait
-        'NodeBufferHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeBufferHost
-            .to-string $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeBufferHost
-              :return 'String
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-            :names $ {} $ :to-string |toString
-          :schema $ :: 'Trait
-        'NodeChunkListHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeChunkListHost
-            .push $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeChunkListHost 'Dynamic
-              :return 'Number
-            .join $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeChunkListHost 'String
-              :return 'String
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-          :schema $ :: 'Trait
-        'NodeHeadersHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeHeadersHost
-            :content-type $ :: 'JsNullish 'String
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-            :names $ {} $ :content-type |content-type
-          :schema $ :: 'Trait
-        'NodeIncomingResponseHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeIncomingResponseHost
-            :status-code $ :: 'JsNullish 'Number
-            :status-message $ :: 'JsNullish 'String
-            :headers 'JsObject
-            .set-encoding $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeIncomingResponseHost 'String
-              :return 'Unit
-            .on $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeIncomingResponseHost 'String 'DynFn
-              :return 'skir.schema/NodeIncomingResponseHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-            :names $ {} (:set-encoding |setEncoding) (:status-code |statusCode) (:status-message |statusMessage)
-          :schema $ :: 'Trait
-        'NodePromiseHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodePromiseHost
-            .then $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodePromiseHost 'DynFn
-              :return 'skir.schema/NodePromiseHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-          :schema $ :: 'Trait
-        'NodeRequestHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeRequestHost
-            :url $ :: 'JsNullish 'String
-            :method $ :: 'JsNullish 'String
-            :headers 'JsObject
-            .on $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeRequestHost 'String 'DynFn
-              :return 'skir.schema/NodeRequestHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-          :schema $ :: 'Trait
-        'NodeServerHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeServerHost
-            .listen $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeServerHost 'Number 'String 'DynFn
-              :return 'skir.schema/NodeServerHost
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-          :schema $ :: 'Trait
-        'NodeServerResponseHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait NodeServerResponseHost
-            :status-code $ :: 'JsNullish 'Number
-            :status-message $ :: 'JsNullish 'String
-            .set-header $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeServerResponseHost 'String 'String
-              :return 'Unit
-            .end $ :: 'Fn $ {}
-              :args $ [] 'skir.schema/NodeServerResponseHost 'String
-              :return 'Unit
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
-            :names $ {} (:set-header |setHeader) (:status-code |statusCode) (:status-message |statusMessage)
-            :writable $ #{} :status-code :status-message
-          :schema $ :: 'Trait
         'Request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Request (:method 'Tag) (:url 'String) (:path 'String) (:querystring 'String)
             :query $ :: 'Map 'String 'Dynamic
-            :headers $ :: 'Map 'String 'Dynamic
+            :headers 'JsObject
             :body $ :: 'Option 'Dynamic
-            :original-request $ :: 'Option 'skir.schema/NodeRequestHost
+            :original-request $ :: 'Option 'js-ffi.node/NodeRequestHost
           :examples $ []
           :schema $ :: 'Enum
         'Response $ %{} 'CodeEntry (:doc |)
@@ -603,40 +489,24 @@
     'skir.util $ %{} 'FileEntry
       :defs $ {}
         'clear! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn clear! () (.clear js/console)
-            ; -> js/process .-stdout $ .write $ read-string "|\"\\033c\""
+          :code $ quote $ defn clear! () (shared/console-clear!)
+            ; -> js/process .-stdout $ .write $ read-string | \033c
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'collect-body-str $ %{} 'CodeEntry
           :doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction"
-          :code $ quote $ defn collect-body-str (request cb)
-            let
-                raw-promise $ new js/Promise $ fn (resolve reject)
-                  let
-                      chunks $ unsafe-coerce (js-array) 'skir.schema/NodeChunkListHost
-                      req $ unsafe-coerce request 'skir.schema/NodeRequestHost
-                    req .on |error $ fn (err) (reject err)
-                    req .on |data $ fn (data) (chunks .push data) &unit
-                    req .on |end $ fn () $ let
-                        buffer-class $ unsafe-coerce js/Buffer 'skir.schema/NodeBufferClassHost
-                        buffer $ buffer-class .concat chunks
-                        text $ buffer .to-string
-                      match cb
-                        (:some callback) (callback text)
-                        (:none) &unit
-                      resolve text
-              unsafe-coerce raw-promise 'skir.schema/NodePromiseHost
+          :code $ quote $ defn collect-body-str (request cb) (node/request-body-text request cb)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'skir.schema/NodePromiseHost)
-            :args $ [] 'skir.schema/NodeRequestHost $ :: 'calcit.core/Option
+          :schema $ :: 'Fn $ {} (:return 'js-ffi.shared/PromiseHost)
+            :args $ [] 'js-ffi.node/NodeRequestHost $ :: 'calcit.core/Option
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'String
             :features $ #{} :js-ffi
         'delay! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn delay! (duration task)
-            js/setTimeout (unsafe-coerce task 'DynFn) (* 1000 duration)
+            node/set-timeout! (unsafe-coerce task 'DynFn) (* 1000 duration)
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -659,13 +529,11 @@
             :generics $ [] 'T
         'promise? $ %{} 'CodeEntry
           :doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise"
-          :code $ quote $ defn promise? (x)
-            and
-              fn? $ .-then x
-              = x $ js/Promise.resolve x
+          :code $ quote $ defn promise? (x) (shared/promise? x)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.util
+          :require (|js-ffi.node :as node) (|js-ffi.shared :as shared)

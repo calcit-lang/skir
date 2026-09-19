@@ -14,7 +14,7 @@ ns demo $ :require (skir.core :as skir) (skir.schema :as schema)
 let
     on-request! $ fn (req-edn res)
       hint-fn $ {}
-        :args $ [] 'skir.schema/Request 'skir.schema/NodeServerResponseHost
+        :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
         :return 'Dynamic
       {} (:code 200) (:message |OK)
         :headers $ {} $ :Content-Type |application/cirru-edn
