@@ -56,3 +56,4 @@ jobs:
       run: |
         calcit calcit.cirru js
         node tests/router-js.mjs
+        node tests/http-js.mjs

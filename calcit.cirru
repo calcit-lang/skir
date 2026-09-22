@@ -248,10 +248,9 @@
                           :return 'Dynamic
                     (:none)
                       write-response! res $ {} (:code 503) (:body |No-request-handler)
-              do
-                node/server-listen! raw-server (:port options) (:host options)
-                  fn () $ :after-start options
-                , raw-server
+              node/server-listen! raw-server (:port options) (:host options)
+                fn () $ :after-start options
+              , raw-server
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.node/NodeServerHost)
             :args $ []
@@ -289,10 +288,9 @@
                   (shared/promise? response)
                     let
                         promise $ unsafe-coerce response 'js-ffi.shared/PromiseHost
-                      do
-                        promise .then! $ fn (result) (write-response! res result)
-                        promise .catch! $ fn (err) (js/console.error err) (raise err)
-                        , &unit
+                      promise .then! $ fn (result) (write-response! res result)
+                      promise .catch! $ fn (err) (js/console.error err) (raise err)
+                      , &unit
                   (and (tag? response) (= response :effect))
                     , &unit
                   true $ do (println |Response: response) (raise "|Unknown response!")
@@ -309,12 +307,11 @@
           :code $ quote $ defn query-params->map (value)
             let
                 result $ atom $ {}
-              do
-                value .for-each! $ fn (item key _parent)
-                  swap! result assoc key $ let
-                      current $ &map:get (deref result) key
-                    if (nil? current) item $ if (list? current) (append current item) ([] current item)
-                deref result
+              value .for-each! $ fn (item key _parent)
+                swap! result assoc key $ let
+                    current $ &map:get (deref result) key
+                  if (nil? current) item $ if (list? current) (append current item) ([] current item)
+              deref result
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'js-ffi.shared/UrlSearchParamsHost
