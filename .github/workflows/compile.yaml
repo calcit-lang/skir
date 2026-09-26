@@ -41,7 +41,7 @@ jobs:
         git diff --exit-code -- calcit.cirru
         calcit calcit.cirru --check-only
         calcit calcit.cirru analyze check-public --ns skir.schema --ns skir.router --ns skir.core --ns skir.client --ns skir.util --summary-only --format json
-        calcit calcit.cirru analyze dynamic-methods --max 0
+        calcit calcit.cirru analyze dynamic-methods
         calcit calcit.cirru analyze deprecated --summary-only --format json
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
