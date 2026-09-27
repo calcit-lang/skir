@@ -36,7 +36,9 @@ try {
   assert.equal(await response.text(), "skir-ok");
   console.log("skir HTTP JS behavior passed");
 } finally {
-  await new Promise((resolve, reject) => {
-    server.close((error) => (error ? reject(error) : resolve()));
-  });
+  if (server.listening) {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
 }
