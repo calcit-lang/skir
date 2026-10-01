@@ -457,14 +457,14 @@
               :code $ quote $ let
                   result $ match-path |/users/42 |users/:id
                 assert= true $ :matches? result
-                assert= (%some |42)
+                assert= (Option :some |42)
                   get (:data result) :id
             %{} 'TestEntry (:name |reports-mismatch)
               :code $ quote $ let
                   result $ match-path |/users |posts
                 assert= false $ :matches? result
                 assert=
-                  %some $ [] |users |posts
+                  Option :some $ [] |users |posts
                   :message result
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.router
