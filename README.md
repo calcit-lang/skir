@@ -20,7 +20,7 @@ let
         :headers $ {} $ :Content-Type |application/cirru-edn
         :body $ {} $ :message "|Hello World!"
   ; "create server"
-  skir/create-server! on-request! $ %none
+  skir/create-server! on-request! $ Option :none
   ; "handle on reload"
   skir/reset-req-handler! on-request!
 ```
@@ -38,6 +38,15 @@ cond
   (= response :effect) (comment "Done with effect")
   true $ do (println |Response: response) (raise "|Unrecognized response!")
 ```
+
+### Development
+
+The toolchain is pinned to Calcit/procs 0.27.0. Resolve modules with
+`caps --strict --ci`, install JavaScript dependencies with
+`yarn install --immutable`, then check with `caps verify --toolchain`.
+CI preserves the existing router and real HTTP request tests; no extra
+verification script is needed. This is a Node server library, not a static
+frontend, so it has no COS upload or CDN asset path.
 
 ### Origin
 
