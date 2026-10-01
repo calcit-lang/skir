@@ -17,7 +17,7 @@
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
-            skir/create-server! render! $ %some $ {}
+            skir/create-server! render! $ Option :some $ {}
               :after-start $ fn (options) (println |options options) (; run-task!)
             , &unit
           :examples $ []
@@ -77,7 +77,7 @@
                   fn (cb)
                     match (:original-request req)
                       (:some raw-request)
-                        collect-body-str raw-request $ %some $ fn (body) (println |BODY: body)
+                        collect-body-str raw-request $ Option :some $ fn (body) (println |BODY: body)
                           cb $ {} (:code 200)
                             :headers $ {}
                             :body :body
@@ -177,7 +177,7 @@
                     if (js-nullish? status-code) 0 $ unsafe-coerce status-code 'Number
                     , :message
                       js-nullish->option $ .-status-message res
-                      , :headers ({}) :body $ %some
+                      , :headers ({}) :body $ Option :some
                         match content-type
                           (:some kind)
                             case-default kind text
@@ -209,7 +209,7 @@
     'skir.core $ %{} 'FileEntry
       :defs $ {}
         '*req-handler $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *req-handler (%none)
+          :code $ quote $ defatom *req-handler (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'DynFn
         'create-server! $ %{} 'CodeEntry (:doc |)
@@ -262,7 +262,10 @@
           :code $ quote $ def default-options
             skir.schema/ServerOptions :port 4000 :after-start
               fn (options)
-                println $ str "|Server listening on " $ :port (unsafe-coerce options 'skir.schema/ServerOptions)
+                hint-fn $ {}
+                  :args $ [] 'skir.schema/ServerOptions
+                  :return 'Unit
+                println $ str "|Server listening on " $ :port options
               , :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
@@ -335,14 +338,14 @@
                 case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
                 , :url url :path
                   option:unwrap-or (nth url-pieces 0) |
-                  , :querystring querystring :query query-data :headers (.-headers req) :body (%none) :original-request $ %some req
+                  , :querystring querystring :query query-data :headers (.-headers req) :body (Option :none) :original-request $ Option :some req
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.schema/Request)
             :args $ [] 'js-ffi.node/NodeRequestHost
             :features $ #{} :js-ffi
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
-            reset! *req-handler $ %some $ unsafe-coerce handler 'DynFn
+            reset! *req-handler $ Option :some $ unsafe-coerce handler 'DynFn
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -414,10 +417,10 @@
                 and (empty? segments) (empty? rule)
                 struct-with result $ :matches? true
               (and (empty? segments) (not (empty? rule)))
-                struct-with result $ :result $ %some (RouteRemainder :rule rule)
+                struct-with result $ :result $ Option :some (RouteRemainder :rule rule)
               (and (not (empty? segments)) (empty? rule))
                 struct-with result (:contains? true)
-                  :result $ %some $ RouteRemainder :path segments
+                  :result $ Option :some $ RouteRemainder :path segments
               true $ let
                   segment $
                     first segments
@@ -434,7 +437,7 @@
                   (:literal expected)
                     if (= segment expected)
                       recur result (rest segments) (rest rule)
-                      struct-with result $ :message $ %some ([] segment expected)
+                      struct-with result $ :message $ Option :some ([] segment expected)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.router/MatchResult)
             :args $ [] 'skir.router/MatchResult (:: 'List 'String) (:: 'List 'skir.router/RoutePart)
@@ -444,7 +447,7 @@
                 segments $ filter (split real-path |/)
                   fn (segment)
                     not $ blank? segment
-                initial $ MatchResult :matches? false :contains? false :rest (%none) :data ({}) :result (%none) :message $ %none
+                initial $ MatchResult :matches? false :contains? false :rest (Option :none) :data ({}) :result (Option :none) :message $ Option :none
               match-chunks initial segments $ expand-rule rule-path
           :examples $ [] $ quote (match-path |/users/42 |users/:id)
           :schema $ :: 'Fn $ {} (:return 'skir.router/MatchResult)
@@ -488,12 +491,12 @@
           :schema $ :: 'Enum
         'request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def request
-            Request :method :get :url | :path | :querystring | :query ({}) :headers ({}) :body (%none) :original-request $ %none
+            Request :method :get :url | :path | :querystring | :query ({}) :headers ({}) :body (Option :none) :original-request $ Option :none
           :examples $ []
           :schema $ :: 'skir.schema/Request
         'response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def response
-            Response :code 200 :message (%none) :headers ({}) :body $ %none
+            Response :code 200 :message (Option :none) :headers ({}) :body $ Option :none
           :examples $ []
           :schema $ :: 'skir.schema/Response
       :ns $ %{} 'NsEntry (:doc |)
