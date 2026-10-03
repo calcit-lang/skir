@@ -4,6 +4,7 @@ import * as calcit from "../js-out/calcit.core.mjs";
 import { create_server_$x_ } from "../js-out/skir.core.mjs";
 
 const tags = calcit.init_tags(["port", "host", "after-start", "code", "body"]);
+let startedOptions;
 const options = calcit._PCT_some(
   calcit._$n__$M_(
     tags.port,
@@ -11,7 +12,9 @@ const options = calcit._PCT_some(
     tags.host,
     "127.0.0.1",
     tags["after-start"],
-    () => {},
+    (options) => {
+      startedOptions = options;
+    },
   ),
 );
 const server = create_server_$x_(
@@ -29,6 +32,8 @@ try {
     }
   });
 
+  assert.equal(calcit._$n_struct_$o_get(startedOptions, tags.port), 0);
+  assert.equal(calcit._$n_struct_$o_get(startedOptions, tags.host), "127.0.0.1");
   const response = await fetch(`http://127.0.0.1:${server.address().port}/smoke`, {
     signal: AbortSignal.timeout(5000),
   });

@@ -231,9 +231,9 @@
                       fn () $ :host default-options
                       fn (value)
                         if (string? value) value $ :host default-options
-                    , :after-start $ option:fold after-start-value
-                      fn () $ :after-start default-options
-                      fn (value)
+                    , :after-start $ match after-start-value
+                      (:none) (:after-start default-options)
+                      (:some value)
                         if (fn? value)
                           unsafe-coerce value $ :: 'Fn $ {}
                             :args $ [] 'skir.schema/ServerOptions
@@ -249,7 +249,9 @@
                     (:none)
                       write-response! res $ {} (:code 503) (:body |No-request-handler)
               node/server-listen! raw-server (:port options) (:host options)
-                fn () $ :after-start options
+                fn ()
+                  (:after-start options) options
+                  , &unit
               , raw-server
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.node/NodeServerHost)
@@ -266,6 +268,7 @@
                   :args $ [] 'skir.schema/ServerOptions
                   :return 'Unit
                 println $ str "|Server listening on " $ :port options
+                , &unit
               , :host |0.0.0.0
           :examples $ []
           :schema $ :: 'skir.schema/ServerOptions
@@ -486,7 +489,11 @@
           :examples $ []
           :schema $ :: 'Enum
         'ServerOptions $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct ServerOptions (:port 'Number) (:after-start 'Fn) (:host 'String)
+          :code $ quote $ defstruct ServerOptions (:port 'Number)
+            :after-start $ :: 'Fn $ {}
+              :args $ [] 'skir.schema/ServerOptions
+              :return 'Unit
+            :host 'String
           :examples $ []
           :schema $ :: 'Enum
         'request $ %{} 'CodeEntry (:doc |)
