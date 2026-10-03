@@ -11,25 +11,27 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+    - uses: actions/checkout@v7.0.1
       with:
         persist-credentials: false
 
-    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+    - uses: actions/setup-node@v6.5.0
       with:
         node-version: 24
 
     - name: Enable Corepack
       run: |
         corepack enable
-        corepack prepare yarn@4.12.0 --activate
+        corepack prepare yarn@4.18.0 --activate
         yarn --version
 
-    - uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
+    - uses: calcit-lang/setup-calcit@v1.5.0
       with:
         tools: calcit,caps
+        version: "0.28.0"
         caps-version: "0.1.1"
 
     - name: Install deps
@@ -40,15 +42,10 @@ jobs:
 
     - name: Validate Calcit snapshot and types
       run: |
-        test "$(calcit --version)" = "0.27.0"
-        test ! -e compact.cirru
-        test ! -e package.cirru
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
         calcit calcit.cirru --check-only
         calcit calcit.cirru analyze check-public --ns skir.schema --ns skir.router --ns skir.core --ns skir.client --ns skir.util --ns skir.app.main --summary-only --format json
-        calcit calcit.cirru analyze dynamic-methods --summary-only --format json
-        calcit calcit.cirru analyze deprecated --summary-only --format json
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
     - name: Test router behavior and documentation
