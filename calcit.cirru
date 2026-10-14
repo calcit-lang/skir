@@ -89,10 +89,15 @@
                   fn (cb)
                     match (:original-request req)
                       (:some raw-request)
-                        collect-body-str raw-request $ Option :some $ fn (body) (println |BODY: body)
+                        collect-body-str raw-request $ Option :some $ fn (body)
+                          hint-fn $ {}
+                            :args $ [] 'String
+                            :return 'Unit
+                          println |BODY: body
                           cb $ {} (:code 200)
                             :headers $ {}
                             :body :body
+                          , &unit
                       (:none)
                         cb $ {} (:code 400)
                           :headers $ {}
