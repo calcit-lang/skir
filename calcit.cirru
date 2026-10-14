@@ -234,8 +234,8 @@
           :code $ quote $ defref *req-handler (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'Option
-            :: 'Fn $ {} (:return 'Dynamic)
-              :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
+            :: 'Fn $ {} (:return 'Unit)
+              :args $ [] 'js-ffi.node/NodeRequestHost 'js-ffi.node/NodeServerResponseHost
         'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
@@ -265,7 +265,7 @@
                           :after-start default-options
                 raw-server $ node/http-create-server $ fn (req res)
                   match @*req-handler
-                    (:some active-handler) (handle-request! req res active-handler)
+                    (:some active-handler) (active-handler req res)
                     (:none)
                       write-response! res $ {} (:code 503) (:body |No-request-handler)
               node/server-listen! raw-server (:port options) (:host options)
@@ -367,7 +367,11 @@
             :features $ #{} :js-ffi
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
-            reset! *req-handler $ Option :some handler
+            reset! *req-handler $ Option :some $ fn (req res)
+              hint-fn $ {}
+                :args $ [] 'js-ffi.node/NodeRequestHost 'js-ffi.node/NodeServerResponseHost
+                :return 'Unit
+              handle-request! req res handler
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
