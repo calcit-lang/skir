@@ -46,10 +46,11 @@
               match route
                 (:callback)
                   fn (send!)
-                    delay! 3 $ fn () $ send!
-                      {} (:code 200)
+                    delay! 3 $ fn ()
+                      send! $ {} (:code 200)
                         :headers $ {}
                         :body "|slow response finished!"
+                      , &unit
                 (:json)
                   {} (:code 200)
                     :headers $ {} $ :Content-Type :application/json
@@ -64,10 +65,21 @@
                     :body "|<div><h2>Heading</h2> this is HTML</div>"
                 (:promise)
                   promise-create $ fn (resolve reject)
-                    delay! 3 $ fn () $ resolve
-                      {} (:code 200)
+                    hint-fn $ {}
+                      :args $ []
+                        :: 'Fn $ {}
+                          :args $ [] $ :: 'Map 'Tag 'Dynamic
+                          :return 'Unit
+                        :: 'Fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'Unit
+                      :return 'Unit
+                    delay! 3 $ fn ()
+                      resolve $ {} (:code 200)
                         :headers $ {}
                         :body "|Message from promise"
+                      , &unit
+                    , &unit
                 (:effect)
                   do (println |effect)
                     {} (:code 202)
@@ -123,12 +135,16 @@
           :code $ quote $ defn try-request! ()
             fetch! |http://localhost:4000 $ fn (response) (println)
               println |Response: $ to-lispy-string response
+              , &unit
             fetch! |http://localhost:4000/callback $ fn (response) (println)
               println |Response: $ to-lispy-string response
+              , &unit
             fetch! |http://localhost:4000/promise $ fn (response) (println)
               println |Response: $ to-lispy-string response
+              , &unit
             fetch! |http://localhost:4000/channel $ fn (response) (println)
               println |Response: $ to-lispy-string response
+              , &unit
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -209,9 +225,11 @@
     'skir.core $ %{} 'FileEntry
       :defs $ {}
         '*req-handler $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *req-handler (Option :none)
+          :code $ quote $ defref *req-handler (Option :none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'calcit.core/Option 'DynFn
+          :schema $ :: 'Ref $ :: 'Option
+            :: 'Fn $ {} (:return 'Dynamic)
+              :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
         'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
@@ -241,11 +259,7 @@
                           :after-start default-options
                 raw-server $ node/http-create-server $ fn (req res)
                   match @*req-handler
-                    (:some active-handler)
-                      handle-request! req res $ unsafe-coerce active-handler $ :: 'Fn
-                        {}
-                          :args $ [] 'skir.schema/Request 'js-ffi.node/NodeServerResponseHost
-                          :return 'Dynamic
+                    (:some active-handler) (handle-request! req res active-handler)
                     (:none)
                       write-response! res $ {} (:code 503) (:body |No-request-handler)
               node/server-listen! raw-server (:port options) (:host options)
@@ -312,11 +326,12 @@
         'query-params->map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn query-params->map (value)
             let
-                result $ atom $ {}
+                result $ ref $ assert-type ({}) (:: 'Map 'String 'Dynamic)
               value .for-each! $ fn (item key _parent)
                 swap! result assoc key $ let
                     current $ &map:get (deref result) key
                   if (nil? current) item $ if (list? current) (append current item) ([] current item)
+                , &unit
               deref result
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -332,9 +347,7 @@
                 method-text $ option:unwrap-or
                   js-nullish->option $ .-method req
                   , |GET
-                url-pieces $ unsafe-coerce
-                  to-calcit-data $ .!split url |?
-                  :: 'List 'String
+                url-pieces $ split url |?
                 querystring $ option:unwrap-or (nth url-pieces 1) |
                 query-data $ query-params->map $ shared/search-params-create querystring
               skir.schema/Request :method
@@ -348,7 +361,7 @@
             :features $ #{} :js-ffi
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
-            reset! *req-handler $ Option :some $ unsafe-coerce handler 'DynFn
+            reset! *req-handler $ Option :some handler
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -358,23 +371,27 @@
             :features $ #{} :js-ffi
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
-            js-set res :status-code $ either (&map:get edn-res :code) 200
-            js-set res :status-message $ either (&map:get edn-res :message) |OK
-            &doseq
-              pair $ either (&map:get edn-res :headers) ({})
-              let[] (key value) pair $ res .set-header! (key->str key) (key->str value)
-            res .end! $ let
-                body $ &map:get edn-res :body
-              cond
-                  list? body
-                  format-cirru-edn body
-                (map? body) (format-cirru-edn body)
-                (nil? body) |
-                (string? body) body
-                (tag? body) (to-lispy-string body)
-                (js/Array.isArray body) (js/JSON.stringify body)
-                true $ js/JSON.stringify body
-            , &unit
+            let
+                edn-res $ if (map? edn-res) edn-res $ raise "|expects response map"
+              js-set res :status-code $ either (&map:get edn-res :code) 200
+              js-set res :status-message $ either (&map:get edn-res :message) |OK
+              &doseq
+                pair $ either (&map:get edn-res :headers) ({})
+                let[] (key value)
+                  decode-map-as pair $ :: 'List 'Dynamic
+                  res .set-header! (key->str key) (key->str value)
+              res .end! $ let
+                  body $ &map:get edn-res :body
+                cond
+                    list? body
+                    format-cirru-edn body
+                  (map? body) (format-cirru-edn body)
+                  (nil? body) |
+                  (string? body) body
+                  (tag? body) (to-lispy-string body)
+                  (js/Array.isArray body) (js/JSON.stringify body)
+                  true $ js/JSON.stringify body
+              , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'js-ffi.node/NodeServerResponseHost 'Dynamic
@@ -480,14 +497,14 @@
             :body $ :: 'Option 'Dynamic
             :original-request $ :: 'Option 'js-ffi.node/NodeRequestHost
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Response (:code 'Number)
             :message $ :: 'Option 'String
             :headers $ :: 'Map 'Dynamic 'Dynamic
             :body $ :: 'Option 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'ServerOptions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct ServerOptions (:port 'Number)
             :after-start $ :: 'Fn $ {}
@@ -495,10 +512,10 @@
               :return 'Unit
             :host 'String
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def request
-            Request :method :get :url | :path | :querystring | :query ({}) :headers ({}) :body (Option :none) :original-request $ Option :none
+            Request :method :get :url | :path | :querystring | :query ({}) :headers (skir.util/empty-headers) :body (Option :none) :original-request $ Option :none
           :examples $ []
           :schema $ :: 'skir.schema/Request
         'response $ %{} 'CodeEntry (:doc |)
@@ -536,6 +553,12 @@
               {} (:return 'Unit)
                 :args $ []
             :features $ #{} :js-ffi
+        'empty-headers $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn empty-headers () (&js-object)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
+            :args $ []
+            :features $ #{} :js-ffi
         'key->str $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn key->str (v)
             cond
@@ -551,12 +574,18 @@
             :generics $ [] 'T
         'promise-create $ %{} 'CodeEntry
           :doc "|Create a PromiseHost from a typed (resolve reject) executor."
-          :code $ quote $ defn promise-create (executor)
-            shared/promise-create $ unsafe-coerce executor 'DynFn
+          :code $ quote $ defn promise-create (executor) (shared/promise-create executor)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.shared/PromiseHost)
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ []
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] 'T
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] 'E
             :features $ #{} :js-ffi
+            :generics $ [] 'T 'E
         'promise? $ %{} 'CodeEntry
           :doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise"
           :code $ quote $ defn promise? (x) (shared/promise? x)

@@ -41,7 +41,7 @@ cond
 
 ### Development
 
-The toolchain is pinned to formal Calcit/procs 0.28.0 and Yarn 4.18.0. Resolve modules with
+The toolchain is pinned to formal Calcit/procs 0.29.3 and Yarn 4.18.0. Resolve modules with
 `caps --strict --ci`, install JavaScript dependencies with
 `yarn install --immutable`, then check with `caps verify --toolchain`.
 CI preserves the existing router and real HTTP request tests; no extra
@@ -49,8 +49,11 @@ verification script is needed. This is a Node server library, not a static
 frontend, so it has no COS upload or CDN asset path.
 
 `after-start` 接收实际的 `skir.schema/ServerOptions` 并返回 `Unit`，在监听成功后调用。
-模块版本保持不变，尚未发布新模块版本。现有 Router / JS FFI alpha 依赖暂时保留，
-不能用不兼容的旧正式版本替代。
+候选模块 0.0.29 使用正式 Router 0.8.33、JS-FFI 0.2.2，不再依赖 alpha。
+注册表保存完整请求回调签名，Promise executor 不再强转为 `DynFn`；
+请求、响应和服务器选项的定义使用 `StructDef`，空 query Ref 有明确的 Map 类型。
+原有路由和真实 HTTP 测试保留；完整严格门禁仍需完成 JS-FFI 请求体回调的依赖升级，
+当前候选尚未发布，不代表全部迁移验收完成。
 
 ### Origin
 
