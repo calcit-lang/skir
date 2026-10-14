@@ -190,16 +190,17 @@
                     content-type $ node/response-header res |content-type
                     status-code $ .-status-code res
                   cb $ skir.schema/Response :code
-                    if (js-nullish? status-code) 0 $ unsafe-coerce status-code 'Number
+                    if (js-nullish? status-code) 0 $ js-ffi.contract/expect-number |response.statusCode status-code
                     , :message
                       js-nullish->option $ .-status-message res
                       , :headers ({}) :body $ Option :some
                         match content-type
                           (:some kind)
-                            case-default kind text
+                            match kind
                               |application/edn $ raise "|Does not handle EDN"
                               |application/cirru-edn $ parse-cirru-edn text
                               |application/json $ js/JSON.parse text
+                              _ text
                           (:none) text
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'JsObject)
@@ -351,7 +352,7 @@
                 querystring $ option:unwrap-or (nth url-pieces 1) |
                 query-data $ query-params->map $ shared/search-params-create querystring
               skir.schema/Request :method
-                case-default method-text :get (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch)
+                match method-text (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch) (_ :get)
                 , :url url :path
                   option:unwrap-or (nth url-pieces 0) |
                   , :querystring querystring :query query-data :headers (.-headers req) :body (Option :none) :original-request $ Option :some req
@@ -563,7 +564,7 @@
           :code $ quote $ defn key->str (v)
             cond
                 tag? v
-                turn-string v
+                to-string v
               (string? v) v
               (list? v) (to-lispy-string v)
               (map? v) (to-lispy-string v)
