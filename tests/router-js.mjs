@@ -10,7 +10,9 @@ const tags = calcit.init_tags(["data", "id", "matches?", "message"]);
 const matched = match_path("/users/42", "users/:id");
 assert.equal(calcit._$n_struct_$o_get(matched, tags["matches?"]), true);
 assert.equal(
-  calcit._$n_map_$o_get(calcit._$n_struct_$o_get(matched, tags.data), tags.id),
+  calcit.option_$o_unwrap(
+    calcit.get(calcit._$n_struct_$o_get(matched, tags.data), tags.id),
+  ),
   "42",
 );
 
@@ -26,13 +28,13 @@ assert.deepEqual(
 );
 
 const single = query_params__GT_map(shared.search_params_create("b=2"));
-assert.equal(calcit._$n_map_$o_get(single, "b"), "2");
+assert.equal(calcit.option_$o_unwrap(calcit.get(single, "b")), "2");
 
 const duplicated = query_params__GT_map(
   shared.search_params_create("a=1&a=3"),
 );
 assert.deepEqual(
-  calcit.listToArray(calcit._$n_map_$o_get(duplicated, "a")),
+  calcit.listToArray(calcit.option_$o_unwrap(calcit.get(duplicated, "a"))),
   ["1", "3"],
 );
 
