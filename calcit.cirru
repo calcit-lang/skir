@@ -334,9 +334,11 @@
             let
                 result $ ref $ assert-type ({}) (:: 'Map 'String 'Dynamic)
               value .for-each! $ fn (item key _parent)
-                swap! result assoc key $ let
-                    current $ &map:get (deref result) key
-                  if (nil? current) item $ if (list? current) (append current item) ([] current item)
+                swap! result assoc key $ match
+                  get (deref result) key
+                  (:some current)
+                    if (nil? current) item $ if (list? current) (append current item) ([] current item)
+                  (:none) item
                 , &unit
               deref result
           :examples $ []
@@ -383,24 +385,32 @@
           :code $ quote $ defn write-response! (res edn-res)
             let
                 edn-res $ if (map? edn-res) edn-res $ raise "|expects response map"
-              js-set res :status-code $ either (&map:get edn-res :code) 200
-              js-set res :status-message $ either (&map:get edn-res :message) |OK
+              js-set res :status-code $ match (get edn-res :code)
+                (:some response-code) (either response-code 200)
+                (:none) 200
+              js-set res :status-message $ match (get edn-res :message)
+                (:some response-message) (either response-message |OK)
+                (:none) |OK
               &doseq
-                pair $ either (&map:get edn-res :headers) ({})
+                pair $ match (get edn-res :headers)
+                  (:some response-headers)
+                    either response-headers $ {}
+                  (:none) ({})
                 let[] (key value)
                   decode-map-as pair $ :: 'List 'Dynamic
                   res .set-header! (key->str key) (key->str value)
-              res .end! $ let
-                  body $ &map:get edn-res :body
-                cond
-                    list? body
-                    format-cirru-edn body
-                  (map? body) (format-cirru-edn body)
-                  (nil? body) |
-                  (string? body) body
-                  (tag? body) (to-lispy-string body)
-                  (js/Array.isArray body) (js/JSON.stringify body)
-                  true $ js/JSON.stringify body
+              res .end! $ match (get edn-res :body)
+                (:some body)
+                  cond
+                      list? body
+                      format-cirru-edn body
+                    (map? body) (format-cirru-edn body)
+                    (nil? body) |
+                    (string? body) body
+                    (tag? body) (to-lispy-string body)
+                    (js/Array.isArray body) (js/JSON.stringify body)
+                    true $ js/JSON.stringify body
+                (:none) |
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -435,7 +445,7 @@
             map (split rule-string |/)
               fn (part)
                 if (starts-with? part |:)
-                  RoutePart :parameter $ turn-tag $ &str:slice part 1
+                  RoutePart :parameter $ to-tag $ .slice part 1
                   RoutePart :literal part
           :examples $ []
           :schema $ :: 'Fn $ {}
