@@ -445,7 +445,7 @@
             map (split rule-string |/)
               fn (part)
                 if (starts-with? part |:)
-                  RoutePart :parameter $ turn-tag $ &str:slice part 1
+                  RoutePart :parameter $ to-tag $ .slice part 1
                   RoutePart :literal part
           :examples $ []
           :schema $ :: 'Fn $ {}
