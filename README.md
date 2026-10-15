@@ -6,7 +6,7 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本迁移分支要求配对正式 Calcit/procs 0.30.0、Router 0.8.34 和 JS-FFI 0.2.3；strict Caps 消费者需要一起对齐，不能混装旧 alpha 图。新的 Skir 版本尚未发布，源码中的 0.0.29 不代表已有升级版 release。
+Skir 0.0.30 要求配对正式 Calcit/procs 0.30.0、Router 0.8.34 和 JS-FFI 0.2.3；strict Caps 消费者需要一起对齐，不能混装旧 alpha 图。发行状态以 GitHub Releases 为准。
 响应和 query 读取使用公开 Option API，保留缺失/显式 nil 的默认值、false 响应体及重复参数顺序；服务端部署路径和 handler 协议不变。
 公共 handler 仍接收 `Request`/Node response，可返回响应 Map、回调、Promise 或 `:effect`；请通过 `create-server!` / `reset-req-handler!` 注册。
 内部 `*req-handler` 现在保存原始 Node request/response → `Unit` 的分发适配器，不再直接保存用户 handler，依赖直接 deref 调用的代码需要改用公共注册 API。
