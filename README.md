@@ -6,7 +6,8 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-Skir 0.0.30 要求配对正式 Calcit/procs 0.30.0、Router 0.8.34 和 JS-FFI 0.2.3；strict Caps 消费者需要一起对齐，不能混装旧 alpha 图。发行状态以 GitHub Releases 为准。
+Skir 0.0.31 将 Router 对齐到正式 0.8.36，解决与 UI 0.7.41 一起使用时 Caps strict 因 0.8.34/0.8.36 两个请求版本拒绝解析的问题；JS-FFI 仍为正式 0.2.3。不改 handler、路由、监听地址或请求/响应运行代码。
+CLI 与 runtime 配对为目前完整可用的 0.30.1-alpha.5。正式 0.30.1 Publish 按上游 #2080 说明暂停在上传前，因此不把候选工具链称为正式版；Skir 自身使用正式 patch 版本。发行状态以 GitHub Releases 为准。
 响应和 query 读取使用公开 Option API，保留缺失/显式 nil 的默认值、false 响应体及重复参数顺序；服务端部署路径和 handler 协议不变。
 公共 handler 仍接收 `Request`/Node response，可返回响应 Map、回调、Promise 或 `:effect`；请通过 `create-server!` / `reset-req-handler!` 注册。
 内部 `*req-handler` 现在保存原始 Node request/response → `Unit` 的分发适配器，不再直接保存用户 handler，依赖直接 deref 调用的代码需要改用公共注册 API。
@@ -53,7 +54,7 @@ cond
 
 ### Development
 
-The toolchain is pinned to formal Calcit/procs 0.30.0 and Yarn 4.18.0. Resolve modules with
+The toolchain is pinned to the complete Calcit/procs 0.30.1-alpha.5 pair and Yarn 4.18.0; formal 0.30.1 publication is still paused upstream. Resolve modules with
 `caps --strict --ci`, install JavaScript dependencies with
 `yarn install --immutable`, then check with `caps verify --toolchain`.
 CI preserves the existing router and real HTTP request tests; no extra
@@ -61,7 +62,7 @@ verification script is needed. This is a Node server library, not a static
 frontend, so it has no COS upload or CDN asset path.
 
 `after-start` 接收实际的 `skir.schema/ServerOptions` 并返回 `Unit`，在监听成功后调用。
-依赖使用正式 Router 0.8.34、JS-FFI 0.2.3，不再依赖 alpha。
+模块依赖使用正式 Router 0.8.36、JS-FFI 0.2.3，不使用 hash 或 alpha 模块引用。
 注册表保存具名宿主参数和真实 `Unit` 返回的分发签名，Promise executor 不再强转为 `DynFn`；
 请求、响应和服务器选项的定义使用 `StructDef`，空 query Ref 有明确的 Map 类型。
 原有路由和真实 HTTP 测试保留；JS-FFI 请求体回调修复已正式发布并同步依赖。
