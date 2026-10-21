@@ -105,9 +105,9 @@
     :deprecatedCalls 0
     :schemaDynamic 0
     :typeNone 0
-    :typeNotFull 9
+    :typeNotFull 8
     :unresolved 0
-    :unsafeCoerce 9
+    :unsafeCoerce 3
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
