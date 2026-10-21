@@ -48,6 +48,8 @@ jobs:
         calcit calcit.cirru --check-only --all-defs
         calcit calcit.cirru fix --workflow strict --verify
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
+        calcit calcit.cirru analyze quality --write-baseline config/calcit-quality.cirru
+        git diff -- config/calcit-quality.cirru
 
     - name: Test router behavior and documentation
       run: |
