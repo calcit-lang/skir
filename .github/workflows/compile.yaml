@@ -42,12 +42,12 @@ jobs:
 
     - name: Validate Calcit snapshot and types
       run: |
+        set -euo pipefail
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
-        calcit calcit.cirru --check-only
-        calcit calcit.cirru --check-only --ns skir.schema --ns skir.router --ns skir.core --ns skir.client --ns skir.util --ns skir.app.main --summary-only --format json
+        calcit calcit.cirru --check-only --all-defs
         calcit calcit.cirru fix --workflow strict --verify
-        calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+        calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
 
     - name: Test router behavior and documentation
       run: |
