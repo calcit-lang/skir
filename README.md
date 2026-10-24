@@ -6,18 +6,18 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本轮保持正式 Calcit CLI / `@calcit/procs` **0.30.1**，同步正式
+**0.0.33 候选**保持正式 Calcit CLI / `@calcit/procs` **0.30.1**，同步正式
 Router **0.8.38**、JS-FFI **0.2.6**。消费者应升级整张依赖图并重新生成 JS，
 不混装旧 alpha 缓存，不以 main/hash 代替正式版本。
 清理八处 Option 和两处 List 旧写法，为路由回调提供真实 String/RoutePart 合同；
-不改变 handler、请求/响应、监听和默认值合同或服务器部署路径。模块版本号暂不变，
-不覆盖已发布的 0.0.32 tag；源码迁移验收通过后另行安排正式 patch。
+不改变 handler、请求/响应、监听和默认值合同或服务器部署路径。不覆盖已发布的
+0.0.32 tag；0.0.33 正式 tag 发布前，消费者不要依赖候选或 main/hash。
 这是 Node 库，不新增 COS/CDN 部署，也不自动合并、部署或重启消费者服务。
 
 ### 历史：0.0.31 迁移
 
 Skir 0.0.31 将 Router 对齐到正式 0.8.36，解决与 UI 0.7.41 一起使用时 Caps strict 因 0.8.34/0.8.36 两个请求版本拒绝解析的问题；JS-FFI 仍为正式 0.2.3。不改 handler、路由、监听地址或请求/响应运行代码。
-该历史版本的 CLI/runtime 使用0.30.1-alpha.5；当前0.0.32候选已切到本文开头的正式0.30.1图。发行状态以 GitHub Releases 为准。
+该历史版本的 CLI/runtime 使用0.30.1-alpha.5；当前0.0.33候选沿用本文开头的正式0.30.1图。发行状态以 GitHub Releases 为准。
 响应和 query 读取使用公开 Option API，保留缺失/显式 nil 的默认值、false 响应体及重复参数顺序；服务端部署路径和 handler 协议不变。
 公共 handler 仍接收 `Request`/Node response，可返回响应 Map、回调、Promise 或 `:effect`；请通过 `create-server!` / `reset-req-handler!` 注册。
 内部 `*req-handler` 现在保存原始 Node request/response → `Unit` 的分发适配器，不再直接保存用户 handler，依赖直接 deref 调用的代码需要改用公共注册 API。

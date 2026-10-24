@@ -1,6 +1,6 @@
 {
   "name": "skir",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "main": "index.js",
   "packageManager": "yarn@4.18.0",
   "repository": "git@github.com:calcit-lang/skir.git",
