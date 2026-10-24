@@ -35,10 +35,10 @@
             ; js/console.log (:original-request req) res
             let
                 router $ parse-address (:url req) router-rules
-                page $ option:unwrap-or
+                page $ .unwrap-or
                   get-in router $ [] :path
                   []
-                route $ option:unwrap-or (nth page 0)
+                route $ .unwrap-or (nth page 0)
                   :: :404 $ []
                 parse-result $ match-path (:url req) |a/:b
               ; println |Parsed: router parse-result page
@@ -246,12 +246,12 @@
                 host-value $ get options-map :host
                 after-start-value $ get options-map :after-start
                 options $ skir.schema/ServerOptions :port
-                  option:fold port-value
+                  .fold port-value
                     fn () $ :port default-options
                     fn (value)
                       if (number? value) value $ :port default-options
                   , :host
-                    option:fold host-value
+                    .fold host-value
                       fn () $ :host default-options
                       fn (value)
                         if (string? value) value $ :host default-options
@@ -349,19 +349,19 @@
         'req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn req->edn (req)
             let
-                url $ option:unwrap-or
+                url $ .unwrap-or
                   js-nullish->option $ .-url req
                   , |
-                method-text $ option:unwrap-or
+                method-text $ .unwrap-or
                   js-nullish->option $ .-method req
                   , |GET
                 url-pieces $ split url |?
-                querystring $ option:unwrap-or (nth url-pieces 1) |
+                querystring $ .unwrap-or (nth url-pieces 1) |
                 query-data $ query-params->map $ shared/search-params-create querystring
               skir.schema/Request :method
                 match method-text (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch) (_ :get)
                 , :url url :path
-                  option:unwrap-or (nth url-pieces 0) |
+                  .unwrap-or (nth url-pieces 0) |
                   , :querystring querystring :query query-data :headers (.-headers req) :body (Option :none) :original-request $ Option :some req
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'skir.schema/Request)
@@ -442,8 +442,11 @@
           :schema $ :: 'EnumDef
         'expand-rule $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expand-rule (rule-string)
-            map (split rule-string |/)
+            .map (split rule-string |/)
               fn (part)
+                hint-fn $ {}
+                  :args $ [] 'String
+                  :return 'skir.router/RoutePart
                 if (starts-with? part |:)
                   RoutePart :parameter $ to-tag $ .slice part 1
                   RoutePart :literal part
@@ -484,8 +487,11 @@
         'match-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn match-path (real-path rule-path)
             let
-                segments $ filter (split real-path |/)
+                segments $ .filter (split real-path |/)
                   fn (segment)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'Bool
                     not $ blank? segment
                 initial $ MatchResult :matches? false :contains? false :rest (Option :none) :data ({}) :result (Option :none) :message $ Option :none
               match-chunks initial segments $ expand-rule rule-path
