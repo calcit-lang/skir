@@ -6,10 +6,12 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-候选 **0.0.32** 配对正式 Calcit CLI / `@calcit/procs` **0.30.1**，同步正式
-Router **0.8.37**、JS-FFI **0.2.5**。消费者应升级整张依赖图并重新生成 JS，
-不混装旧 alpha 缓存，候选 tag 发布前不要以 main/hash 代替。
-相对已发布0.0.31，不改Snapshot、handler/请求/响应/监听合同或服务器部署路径。
+本轮保持正式 Calcit CLI / `@calcit/procs` **0.30.1**，同步正式
+Router **0.8.38**、JS-FFI **0.2.6**。消费者应升级整张依赖图并重新生成 JS，
+不混装旧 alpha 缓存，不以 main/hash 代替正式版本。
+清理八处 Option 和两处 List 旧写法，为路由回调提供真实 String/RoutePart 合同；
+不改变 handler、请求/响应、监听和默认值合同或服务器部署路径。模块版本号暂不变，
+不覆盖已发布的 0.0.32 tag；源码迁移验收通过后另行安排正式 patch。
 这是 Node 库，不新增 COS/CDN 部署，也不自动合并、部署或重启消费者服务。
 
 ### 历史：0.0.31 迁移
@@ -70,7 +72,7 @@ verification script is needed. This is a Node server library, not a static
 frontend, so it has no COS upload or CDN asset path.
 
 `after-start` 接收实际的 `skir.schema/ServerOptions` 并返回 `Unit`，在监听成功后调用。
-模块依赖使用正式 Router 0.8.37、JS-FFI 0.2.5，不使用 hash 或 alpha 模块引用。
+模块依赖使用正式 Router 0.8.38、JS-FFI 0.2.6，不使用 hash 或 alpha 模块引用。
 CI使用 `--check-only --all-defs` 替代重复的入口/namespace清单；完整strict、质量基线、
 原路由测试和真实回环HTTP回归均保留，不新增独立验证脚本或放宽预算。
 注册表保存具名宿主参数和真实 `Unit` 返回的分发签名，Promise executor 不再强转为 `DynFn`；
