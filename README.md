@@ -6,7 +6,7 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本轮源码配对正式 Calcit CLI / `@calcit/procs` **0.31.0**、已发布 Router
+**0.0.34 候选**配对正式 Calcit CLI / `@calcit/procs` **0.31.0**、已发布 Router
 **0.9.0-alpha.3** 与 JS-FFI **0.2.7**；传递 Respo 为 **0.17.0-alpha.4**。
 消费者需同步依赖图并重新生成 JS。Router / Respo 仍为 alpha，不能把正式 CLI
 等同于整张依赖图稳定。本轮不覆盖已发布 0.0.33 tag，也不把 main/hash 提供给消费者。
