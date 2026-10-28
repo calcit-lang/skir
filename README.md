@@ -6,6 +6,19 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
+本轮源码配对正式 Calcit CLI / `@calcit/procs` **0.31.0**、已发布 Router
+**0.9.0-alpha.3** 与 JS-FFI **0.2.7**；传递 Respo 为 **0.17.0-alpha.4**。
+消费者需同步依赖图并重新生成 JS。Router / Respo 仍为 alpha，不能把正式 CLI
+等同于整张依赖图稳定。本轮不覆盖已发布 0.0.33 tag，也不把 main/hash 提供给消费者。
+
+Calcit Snapshot、公开 handler、请求/响应协议和监听配置不变。原 HTTP JS fixture
+将已退役 `%some` 换为具名 Option 构造，原断言和回环范围不变。
+全部定义、完整 strict、原质量基线、两项附带路由测试、原 JS 路由与真实回环 HTTP
+测试通过；未增加验证脚本或放宽预算。没有前端 COS、服务部署或进程重启。
+已有开放 handler / FFI 类型边界仍保留，不能据此宣称零类型债务。
+
+### 历史：0.0.33 迁移
+
 **0.0.33 候选**保持正式 Calcit CLI / `@calcit/procs` **0.30.1**，同步正式
 Router **0.8.38**、JS-FFI **0.2.6**。消费者应升级整张依赖图并重新生成 JS，
 不混装旧 alpha 缓存，不以 main/hash 代替正式版本。
@@ -64,7 +77,7 @@ cond
 
 ### Development
 
-The current candidate pairs formal Calcit/procs 0.30.1 and Yarn 4.18.0. Resolve modules with
+The current source pairs formal Calcit/procs 0.31.0 and Yarn 4.18.0. Resolve modules with
 `caps --strict --ci`, install JavaScript dependencies with
 `yarn install --immutable`, then check with `caps verify --toolchain`.
 CI preserves the existing router and real HTTP request tests; no extra
@@ -72,7 +85,7 @@ verification script is needed. This is a Node server library, not a static
 frontend, so it has no COS upload or CDN asset path.
 
 `after-start` 接收实际的 `skir.schema/ServerOptions` 并返回 `Unit`，在监听成功后调用。
-模块依赖使用正式 Router 0.8.38、JS-FFI 0.2.6，不使用 hash 或 alpha 模块引用。
+当前模块使用已发布 Router 0.9.0-alpha.3、JS-FFI 0.2.7，不使用 hash 或浮动 main。
 CI使用 `--check-only --all-defs` 替代重复的入口/namespace清单；完整strict、质量基线、
 原路由测试和真实回环HTTP回归均保留，不新增独立验证脚本或放宽预算。
 注册表保存具名宿主参数和真实 `Unit` 返回的分发签名，Promise executor 不再强转为 `DynFn`；

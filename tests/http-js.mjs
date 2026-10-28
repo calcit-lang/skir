@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import * as calcit from "../js-out/calcit.core.mjs";
 import { create_server_$x_ } from "../js-out/skir.core.mjs";
 
-const tags = calcit.init_tags(["port", "host", "after-start", "code", "body"]);
+const tags = calcit.init_tags(["port", "host", "after-start", "code", "body", "some"]);
 let startedOptions;
-const options = calcit._PCT_some(
+const options = calcit._PCT__$o__$o_(
+  calcit.Option,
+  tags.some,
   calcit._$n__$M_(
     tags.port,
     0,
