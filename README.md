@@ -10,6 +10,10 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 Query 参数值现在声明为字符串或字符串列表的 union。单次参数返回字符串，重复参数返回保持出现顺序的字符串列表。Demo 按 Router 的 Struct 字段读取路由路径。
 
+`Request.query` 现在同样使用 `Map String QueryValue`，读取后可按 String / List String 分支处理。
+手工构造 Request 的调用方需要提供字符串或字符串列表，其他自定义值不再符合类型合同。
+HTTP 解码、缺失参数、空字符串及重复参数顺序保持，headers/body 仍保留原开放边界。
+
 公共 handler 接收 `Request` / Node response，可返回响应 Map、回调、Promise
 或 `:effect`；通过 `create-server!` / `reset-req-handler!` 注册。
 内部 `*req-handler` 保存原始 Node request/response → `Unit` 的分发适配器，
