@@ -480,7 +480,7 @@
           :schema $ quote UnionDef
         'Request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Request (:method Tag) (:url String) (:path String) (:querystring String)
-            :query $ quote $ Map String Dynamic
+            :query $ quote $ Map String skir.schema/QueryValue
             :headers JsObject
             :body $ quote $ Option Dynamic
             :original-request $ quote $ Option js-ffi.node/NodeRequestHost
