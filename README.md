@@ -6,15 +6,9 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-**0.0.35 候选**配对正式 Calcit CLI / `@calcit/procs` **0.32.1**，使用已发布
-Router **0.9.0-alpha.4**、JS-FFI **0.2.9**，传递 Respo **0.17.1**。
-Router 尚无对应正式版，暂保留精确 alpha tag，不使用 main/hash 或未发布版本。
-消费者须升级整张依赖图并重新生成 JS；本 PR 不发版、部署或重启服务。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.34.1**，使用正式 Router **0.10.0**、Respo **0.18.0** 与 JS-FFI **0.2.9**。消费者升级依赖图后需重新生成 JS。
 
-类型标注迁为 quoted 类型表达式，38 个定义 schema 和运行代码保持。
-原 handler、请求/响应协议、监听配置与质量预算不变。已有 8 个不完整定义和
-3 处 unsafe 边界仍保留，不宣称零类型债务。完整 strict、原质量门禁、路由和
-真实回环 HTTP 测试均通过，不增加验证脚本。
+Query 参数值现在声明为字符串或字符串列表的 union。单次参数返回字符串，重复参数返回保持出现顺序的字符串列表。Demo 按 Router 的 Struct 字段读取路由路径。
 
 公共 handler 接收 `Request` / Node response，可返回响应 Map、回调、Promise
 或 `:effect`；通过 `create-server!` / `reset-req-handler!` 注册。
