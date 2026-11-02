@@ -6,13 +6,13 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本项目配对 Calcit CLI 和 `@calcit/procs` **0.34.1**，使用正式 Router **0.10.0**、Respo **0.18.0** 与 JS-FFI **0.2.9**。消费者升级依赖图后需重新生成 JS。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.34.2**，使用正式 Router **0.11.1**、Respo **0.19.1** 与 JS-FFI **0.2.10**。消费者升级依赖图后需重新生成 JS；本候选为 0.0.38，发行状态以正式 Git tag 为准。
 
 Query 参数值现在声明为字符串或字符串列表的 union。单次参数返回字符串，重复参数返回保持出现顺序的字符串列表。Demo 按 Router 的 Struct 字段读取路由路径。
 
 `Request.query` 现在同样使用 `Map String QueryValue`，读取后可按 String / List String 分支处理。
 手工构造 Request 的调用方需要提供字符串或字符串列表，其他自定义值不再符合类型合同。
-HTTP 解码、缺失参数、空字符串及重复参数顺序保持，headers/body 仍保留原开放边界。
+HTTP 解码、缺失参数、空字符串及重复参数顺序保持，headers/body 仍保留原开放边界。已审查这些剩余 Dynamic：响应头当前将任意值转为字符串，body 也可承载任意 Cirru/JSON 数据，不能在保持现有 API 的同时简单缩为标量 union；本轮保留已完成的 QueryValue 收紧，不修改这些协议。
 
 公共 handler 接收 `Request` / Node response，可返回响应 Map、回调、Promise
 或 `:effect`；通过 `create-server!` / `reset-req-handler!` 注册。
@@ -58,7 +58,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.34.1：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.34.2：
 
 ```sh
 caps --strict --ci
