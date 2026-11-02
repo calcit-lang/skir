@@ -54,7 +54,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.32.1：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.34.1：
 
 ```sh
 caps --strict --ci
