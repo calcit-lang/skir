@@ -33,9 +33,7 @@
             ; js/console.log (:original-request req) res
             let
                 router $ parse-address (:url req) router-rules
-                page $ .unwrap-or
-                  get-in router $ [] :path
-                  []
+                page $ :path router
                 route $ .unwrap-or (nth page 0)
                   :: :404 $ []
                 parse-result $ match-path (:url req) |a/:b
@@ -301,18 +299,23 @@
           :code $ quote $ defn query-params->map (value)
             let
                 result $ ref $ assert-type ({})
-                  quote $ Map String Dynamic
+                  quote $ Map String skir.schema/QueryValue
               value .for-each! $ fn (item key _parent)
-                swap! result assoc key $ match
-                  get (deref result) key
-                  (:some current)
-                    if (nil? current) item $ if (list? current) (append current item) ([] current item)
-                  (:none) item
+                hint-fn $ Fn String String js-ffi.shared/UrlSearchParamsHost $ -> Unit
+                swap! result assoc key $ assert-type
+                  match
+                    get (deref result) key
+                    (:some current)
+                      match current
+                        (String text) ([] text item)
+                        (List items) (append items item)
+                    (:none) item
+                  quote skir.schema/QueryValue
                 , &unit
               deref result
           :examples $ []
           :schema $ quote $ Fn js-ffi.shared/UrlSearchParamsHost
-            -> $ Map String Dynamic
+            -> $ Map String skir.schema/QueryValue
             :features :js-ffi
         'req->edn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn req->edn (req)
@@ -360,7 +363,7 @@
                     either response-headers $ {}
                   (:none) ({})
                 let[] (key value)
-                  decode-map-as pair $ :: 'List 'Dynamic
+                  decode-map-as pair $ quote $ List Dynamic
                   res .set-header! (key->str key) (key->str value)
               res .end! $ match (get edn-res :body)
                 (:some body)
@@ -384,7 +387,7 @@
     'skir.router $ %{} 'FileEntry
       :defs $ {}
         'MatchResult $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct MatchResult (:matches? 'Bool) (:contains? 'Bool)
+          :code $ quote $ defstruct MatchResult (:matches? Bool) (:contains? Bool)
             :rest $ quote $ Option (List skir.router/RoutePart)
             :data $ quote $ Map Tag String
             :result $ quote $ Option skir.router/RouteRemainder
@@ -392,7 +395,7 @@
           :examples $ []
           :schema $ quote StructDef
         'RoutePart $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum RoutePart (:literal 'String) (:parameter 'Tag)
+          :code $ quote $ defenum RoutePart (:literal String) (:parameter Tag)
           :examples $ []
           :schema $ quote EnumDef
         'RouteRemainder $ %{} 'CodeEntry (:doc |)
@@ -470,25 +473,30 @@
         :code $ quote $ ns skir.router
     'skir.schema $ %{} 'FileEntry
       :defs $ {}
+        'QueryValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion QueryValue String
+            quote $ List String
+          :examples $ []
+          :schema $ quote UnionDef
         'Request $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Request (:method 'Tag) (:url 'String) (:path 'String) (:querystring 'String)
+          :code $ quote $ defstruct Request (:method Tag) (:url String) (:path String) (:querystring String)
             :query $ quote $ Map String Dynamic
-            :headers 'JsObject
+            :headers JsObject
             :body $ quote $ Option Dynamic
             :original-request $ quote $ Option js-ffi.node/NodeRequestHost
           :examples $ []
           :schema $ quote StructDef
         'Response $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Response (:code 'Number)
+          :code $ quote $ defstruct Response (:code Number)
             :message $ quote $ Option String
             :headers $ quote $ Map Dynamic Dynamic
             :body $ quote $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
         'ServerOptions $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct ServerOptions (:port 'Number)
+          :code $ quote $ defstruct ServerOptions (:port Number)
             :after-start $ quote $ Fn skir.schema/ServerOptions (-> Unit)
-            :host 'String
+            :host String
           :examples $ []
           :schema $ quote StructDef
         'request $ %{} 'CodeEntry (:doc |)
