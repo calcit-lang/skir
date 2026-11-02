@@ -486,6 +486,18 @@
             :original-request $ quote $ Option js-ffi.node/NodeRequestHost
           :examples $ []
           :schema $ quote StructDef
+          :tests $ [] $ %{} 'TestEntry (:name |typed-query-union-handler)
+            :code $ quote $ let
+                read-values $ fn (req)
+                  hint-fn $ Fn skir.schema/Request $ -> (List String)
+                  match
+                    get (:query req) |a
+                    (:some value)
+                      match value
+                        (String text) ([] text)
+                        (List items) items
+                    (:none) ([])
+              assert= true $ fn? read-values
         'Response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Response (:code Number)
             :message $ quote $ Option String
