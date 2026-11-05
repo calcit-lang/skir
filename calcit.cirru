@@ -106,18 +106,18 @@
         'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router-rules
             []
-              :: :home $ [] |home
-              :: :callback $ [] |callback
-              :: :html $ [] |html
-              :: :json $ [] |json
-              :: :edn $ [] |edn
-              :: :promise $ [] |promise
-              :: :body $ [] |body
-              :: :error $ [] |error
-              :: :effect $ [] |effect
-              :: :throw-error $ [] |throw-error
+              respo-router.schema/RouteRule :name :home :pattern $ [] |home
+              respo-router.schema/RouteRule :name :callback :pattern $ [] |callback
+              respo-router.schema/RouteRule :name :html :pattern $ [] |html
+              respo-router.schema/RouteRule :name :json :pattern $ [] |json
+              respo-router.schema/RouteRule :name :edn :pattern $ [] |edn
+              respo-router.schema/RouteRule :name :promise :pattern $ [] |promise
+              respo-router.schema/RouteRule :name :body :pattern $ [] |body
+              respo-router.schema/RouteRule :name :error :pattern $ [] |error
+              respo-router.schema/RouteRule :name :effect :pattern $ [] |effect
+              respo-router.schema/RouteRule :name :throw-error :pattern $ [] |throw-error
           :examples $ []
-          :schema $ quote $ List Enum
+          :schema $ quote $ List respo-router.schema/RouteRule
         'run-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-task! () (try-request!)
           :examples $ []
@@ -234,7 +234,7 @@
                       (:none) (:after-start default-options)
                       (:some value)
                         if (fn? value)
-                          unsafe-coerce value $ quote $ Fn skir.schema/ServerOptions (-> Unit)
+                          unsafe-coerce value $ Fn skir.schema/ServerOptions $ -> Unit
                           :after-start default-options
                 raw-server $ node/http-create-server $ fn (req res)
                   match @*req-handler
@@ -273,10 +273,9 @@
                     write-response! res response
                   (fn? response)
                     let
-                        callback-handler $ unsafe-coerce response $ quote
-                          Fn
-                            Fn Dynamic $ -> Unit
-                            -> Unit
+                        callback-handler $ unsafe-coerce response $ Fn
+                          Fn Dynamic $ -> Unit
+                          -> Unit
                       callback-handler $ fn (response-data) (write-response! res response-data)
                   (shared/promise? response)
                     let
@@ -298,8 +297,7 @@
         'query-params->map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn query-params->map (value)
             let
-                result $ ref $ assert-type ({})
-                  quote $ Map String skir.schema/QueryValue
+                result $ ref $ assert-type ({}) (Map String skir.schema/QueryValue)
               value .for-each! $ fn (item key _parent)
                 hint-fn $ Fn String String js-ffi.shared/UrlSearchParamsHost $ -> Unit
                 swap! result assoc key $ assert-type
@@ -363,7 +361,7 @@
                     either response-headers $ {}
                   (:none) ({})
                 let[] (key value)
-                  decode-map-as pair $ quote $ List Dynamic
+                  decode-map-as pair $ List Dynamic
                   res .set-header! (key->str key) (key->str value)
               res .end! $ match (get edn-res :body)
                 (:some body)
@@ -388,10 +386,10 @@
       :defs $ {}
         'MatchResult $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MatchResult (:matches? Bool) (:contains? Bool)
-            :rest $ quote $ Option (List skir.router/RoutePart)
-            :data $ quote $ Map Tag String
-            :result $ quote $ Option skir.router/RouteRemainder
-            :message $ quote $ Option (List String)
+            :rest $ Option $ List skir.router/RoutePart
+            :data $ Map Tag String
+            :result $ Option skir.router/RouteRemainder
+            :message $ Option $ List String
           :examples $ []
           :schema $ quote StructDef
         'RoutePart $ %{} 'CodeEntry (:doc |)
@@ -400,8 +398,8 @@
           :schema $ quote EnumDef
         'RouteRemainder $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum RouteRemainder
-            :rule $ quote $ List skir.router/RoutePart
-            :path $ quote $ List String
+            :rule $ List skir.router/RoutePart
+            :path $ List String
           :examples $ []
           :schema $ quote EnumDef
         'expand-rule $ %{} 'CodeEntry (:doc |)
@@ -474,16 +472,15 @@
     'skir.schema $ %{} 'FileEntry
       :defs $ {}
         'QueryValue $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defunion QueryValue String
-            quote $ List String
+          :code $ quote $ defunion QueryValue String (List String)
           :examples $ []
           :schema $ quote UnionDef
         'Request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Request (:method Tag) (:url String) (:path String) (:querystring String)
-            :query $ quote $ Map String skir.schema/QueryValue
+            :query $ Map String skir.schema/QueryValue
             :headers JsObject
-            :body $ quote $ Option Dynamic
-            :original-request $ quote $ Option js-ffi.node/NodeRequestHost
+            :body $ Option Dynamic
+            :original-request $ Option js-ffi.node/NodeRequestHost
           :examples $ []
           :schema $ quote StructDef
           :tests $ [] $ %{} 'TestEntry (:name |typed-query-union-handler)
@@ -500,14 +497,14 @@
               assert= true $ fn? read-values
         'Response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Response (:code Number)
-            :message $ quote $ Option String
-            :headers $ quote $ Map Dynamic Dynamic
-            :body $ quote $ Option Dynamic
+            :message $ Option String
+            :headers $ Map Dynamic Dynamic
+            :body $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
         'ServerOptions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct ServerOptions (:port Number)
-            :after-start $ quote $ Fn skir.schema/ServerOptions (-> Unit)
+            :after-start $ Fn skir.schema/ServerOptions $ -> Unit
             :host String
           :examples $ []
           :schema $ quote StructDef
