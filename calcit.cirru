@@ -574,6 +574,15 @@
             :body $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
+          :tests $ [] $ %{} 'TestEntry (:name |typed-number-and-bool-headers)
+            :code $ quote $ let
+                response $ Response :code 200 :message (Option :none) :headers
+                  {} (|x-count 7) (|x-enabled true)
+                  , :body $ Option :none
+              assert= (Option :some 7)
+                get (:headers response) |x-count
+              assert= (Option :some true)
+                get (:headers response) |x-enabled
         'ResponseAction $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion ResponseAction skir.schema/Response skir.schema/DeferredResponse skir.schema/ResponseEffect
           :examples $ []

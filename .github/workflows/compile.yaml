@@ -52,7 +52,7 @@ jobs:
     - name: Test router behavior and documentation
       run: |
         calcit calcit.cirru test skir.router/match-path --require-match --summary-only --format json
-        calcit calcit.cirru test skir.schema/Request --require-match --summary-only --format json
+        calcit calcit.cirru test skir.schema --require-match --summary-only --format json
         calcit calcit.cirru analyze check-examples --ns skir.router
         calcit calcit.cirru docs format-md README.md --check
         calcit calcit.cirru docs check-md README.md --failures-only
