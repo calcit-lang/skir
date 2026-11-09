@@ -94,10 +94,21 @@ const typedServer = create_typed_server_$x_((request, response) => {
       return struct(DeferredResponse, typedTags.start, (send) => {
         setImmediate(() => send(reply(202, "deferred")));
       });
+    case "/bad-header":
+      return struct(DeferredResponse, typedTags.start, (send) => {
+        setImmediate(() => send(reply(200, "discarded", map("invalid header name", "value"))));
+      });
     case "/effect":
       response.writeHead(201);
       response.end("written directly");
       return calcit._PCT__$o__$o_(ResponseEffect, typedTags.handled);
+    case "/after-end":
+      response.writeHead(201);
+      response.end("already written");
+      throw new Error("after end");
+    case "/partial":
+      response.write("partial body");
+      throw new Error("after headers");
     default:
       return reply(200, false, map("x-skir", "typed"));
   }
@@ -119,6 +130,13 @@ try {
   const effect = await request("/effect");
   assert.equal(effect.status, 201);
   assert.equal(await effect.text(), "written directly");
+  const invalidHeader = await request("/bad-header");
+  assert.equal(invalidHeader.status, 500);
+  await invalidHeader.text();
+  const ended = await request("/after-end");
+  assert.equal(ended.status, 201);
+  assert.equal(await ended.text(), "already written");
+  await assert.rejects(async () => (await request("/partial")).text());
   reset_typed_req_handler_$x_(() => reply(200, "after reset"));
   assert.equal(await (await request("/")).text(), "after reset");
   console.log("skir typed HTTP reply, deferred callback, manual response and handler reset passed");

@@ -351,7 +351,9 @@
                     (skir.schema/Response response) (write-typed-response! res response)
                     (skir.schema/DeferredResponse deferred)
                         :start deferred
-                        fn (response) (write-typed-response! res response)
+                        fn (response)
+                          try (write-typed-response! res response)
+                            fn (err) (write-server-error! res err)
                     (skir.schema/ResponseEffect effect) &unit
                 fn (err) (write-server-error! res err)
             , &unit
@@ -409,8 +411,16 @@
           :examples $ []
           :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost Dynamic (-> Unit) (:features :js-ffi)
         'write-server-error! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn write-server-error! (res err) (js/console.error err) (js-set res :status-code 500) (js-set res :status-message "|Server Error")
-            res .end! $ str (to-lispy-string err) &newline &newline
+          :code $ quote $ defn write-server-error! (res err) (js/console.error err)
+            when-not
+              contract/expect-bool |ServerResponse.writableEnded $ js/Reflect.get res |writableEnded
+              if
+                contract/expect-bool |ServerResponse.headersSent $ js/Reflect.get res |headersSent
+                do
+                  js/Reflect.apply (js/Reflect.get res |destroy) res $ js/Array.of
+                  , &unit
+                do (js-set res :status-code 500) (js-set res :status-message "|Server Error")
+                  res .end! $ str (to-lispy-string err) &newline &newline
             , &unit
           :examples $ []
           :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost E (-> Unit) (:generics E) (:features :js-ffi)
@@ -427,6 +437,7 @@
         :code $ quote $ ns skir.core
           :require (js-ffi.node :as node) (js-ffi.shared :as shared)
             skir.util :refer $ key->str
+            js-ffi.contract :as contract
     'skir.router $ %{} 'FileEntry
       :defs $ {}
         'MatchResult $ %{} 'CodeEntry (:doc |)
