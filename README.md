@@ -6,13 +6,15 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本项目配对 Calcit CLI 和 `@calcit/procs` **0.37.0**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS；本候选为 0.0.40，发行状态以正式 Git tag 为准。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.38.0**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS。
+
+新 handler 可用 `create-typed-server!` 注册，返回 `ResponseAction`。旧的 `create-server!` 与 `reset-req-handler!` 继续接收原有的 Map、回调、Promise 和 `:effect`。
 
 Query 参数值现在声明为字符串或字符串列表的 union。单次参数返回字符串，重复参数返回保持出现顺序的字符串列表。Demo 按 Router 的 Struct 字段读取路由路径。
 
 `Request.query` 现在同样使用 `Map String QueryValue`，读取后可按 String / List String 分支处理。
 手工构造 Request 的调用方需要提供字符串或字符串列表，其他自定义值不再符合类型合同。
-HTTP 解码、缺失参数、空字符串及重复参数顺序保持，headers/body 仍保留原开放边界。已审查这些剩余 Dynamic：响应头当前将任意值转为字符串，body 也可承载任意 Cirru/JSON 数据，不能在保持现有 API 的同时简单缩为标量 union；本轮保留已完成的 QueryValue 收紧，不修改这些协议。
+HTTP 解码保留缺失参数、空字符串和重复参数的顺序。响应头沿用原字符串转换，响应体仍可承载 Cirru/JSON 数据。
 
 公共 handler 接收 `Request` / Node response，可返回响应 Map、回调、Promise
 或 `:effect`；通过 `create-server!` / `reset-req-handler!` 注册。
@@ -23,7 +25,19 @@ HTTP 解码、缺失参数、空字符串及重复参数顺序保持，headers/b
 `after-start` 接收实际 `ServerOptions` 并返回 `Unit`；Promise executor、
 定时器和请求体回调也须遵守完整签名并返回 `Unit`。
 
-### Usage
+### 具名响应
+
+`ResponseAction` 允许返回 `Response`、`DeferredResponse` 或 `ResponseEffect :handled`。延迟响应的 `:start` 回调接收一个只接受 `Response` 的发送函数。已经直接写入 Node 响应时，返回 `ResponseEffect :handled`。用 `reset-typed-req-handler!` 热替换具名 handler。
+
+```cirru.no-run
+skir.core/create-typed-server!
+  fn (request response)
+    hint-fn $ Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+    struct-with skir.schema/response $ :body $ Option :some (:path request)
+  struct-with skir.core/default-options $ :host |127.0.0.1
+```
+
+### 原有响应接口
 
 WIP...
 
@@ -58,7 +72,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.37.0：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.38.0：
 
 ```sh
 caps --strict --ci

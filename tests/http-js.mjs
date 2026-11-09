@@ -1,11 +1,20 @@
 import assert from "node:assert/strict";
 
 import * as calcit from "../js-out/calcit.core.mjs";
-import { create_server_$x_ } from "../js-out/skir.core.mjs";
+import { create_server_$x_, create_typed_server_$x_, reset_typed_req_handler_$x_ } from "../js-out/skir.core.mjs";
+import { DeferredResponse, Response, ResponseEffect, ServerOptions } from "../js-out/skir.schema.mjs";
 
 const tags = calcit.init_tags(["port", "host", "after-start", "code", "body", "some", "none", "query"]);
 let startedOptions;
 const requests = [];
+const waitForListening = (server) => new Promise((resolve, reject) => {
+  if (server.listening) {
+    resolve();
+  } else {
+    server.once("listening", resolve);
+    server.once("error", reject);
+  }
+});
 const options = calcit._PCT__$o__$o_(
   calcit.Option,
   tags.some,
@@ -29,14 +38,7 @@ const server = create_server_$x_(
 );
 
 try {
-  await new Promise((resolve, reject) => {
-    if (server.listening) {
-      resolve();
-    } else {
-      server.once("listening", resolve);
-      server.once("error", reject);
-    }
-  });
+  await waitForListening(server);
 
   assert.equal(calcit._$n_struct_$o_get(startedOptions, tags.port), 0);
   assert.equal(calcit._$n_struct_$o_get(startedOptions, tags.host), "127.0.0.1");
@@ -71,4 +73,57 @@ try {
       server.close((error) => (error ? reject(error) : resolve()));
     });
   }
+}
+
+const typedTags = calcit.init_tags(["message", "headers", "start", "handled", "path"]);
+const some = (value) => calcit._PCT__$o__$o_(calcit.Option, tags.some, value);
+const none = calcit._PCT__$o__$o_(calcit.Option, tags.none);
+const struct = calcit._$n__PCT__$M_;
+const map = calcit._$n__$M_;
+const reply = (code, body, headers = map()) => struct(
+  Response, tags.code, code, typedTags.message, none, typedTags.headers, headers, tags.body, some(body),
+);
+let typedStartedOptions;
+const typedOptions = struct(
+  ServerOptions, tags.port, 0, tags.host, "127.0.0.1", tags["after-start"],
+  (options) => { typedStartedOptions = options; },
+);
+const typedServer = create_typed_server_$x_((request, response) => {
+  switch (calcit._$n_struct_$o_get(request, typedTags.path)) {
+    case "/later":
+      return struct(DeferredResponse, typedTags.start, (send) => {
+        setImmediate(() => send(reply(202, "deferred")));
+      });
+    case "/effect":
+      response.writeHead(201);
+      response.end("written directly");
+      return calcit._PCT__$o__$o_(ResponseEffect, typedTags.handled);
+    default:
+      return reply(200, false, map("x-skir", "typed"));
+  }
+}, typedOptions);
+
+try {
+  await waitForListening(typedServer);
+  assert.equal(typedStartedOptions, typedOptions);
+  const request = (path) => fetch(`http://127.0.0.1:${typedServer.address().port}${path}`, {
+    signal: AbortSignal.timeout(5000),
+  });
+  const immediate = await request("/");
+  assert.equal(immediate.status, 200);
+  assert.equal(immediate.headers.get("x-skir"), "typed");
+  assert.equal(await immediate.text(), "false");
+  const deferred = await request("/later");
+  assert.equal(deferred.status, 202);
+  assert.equal(await deferred.text(), "deferred");
+  const effect = await request("/effect");
+  assert.equal(effect.status, 201);
+  assert.equal(await effect.text(), "written directly");
+  reset_typed_req_handler_$x_(() => reply(200, "after reset"));
+  assert.equal(await (await request("/")).text(), "after reset");
+  console.log("skir typed HTTP reply, deferred callback, manual response and handler reset passed");
+} finally {
+  await new Promise((resolve, reject) => {
+    typedServer.close((error) => (error ? reject(error) : resolve()));
+  });
 }

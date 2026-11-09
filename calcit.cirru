@@ -236,22 +236,19 @@
                         if (fn? value)
                           unsafe-coerce value $ Fn skir.schema/ServerOptions $ -> Unit
                           :after-start default-options
-                raw-server $ node/http-create-server $ fn (req res)
-                  match @*req-handler
-                    (:some active-handler) (active-handler req res)
-                    (:none)
-                      write-response! res $ {} (:code 503) (:body |No-request-handler)
-              node/server-listen! raw-server (:port options) (:host options)
-                fn ()
-                  (:after-start options) options
-                  , &unit
-              , raw-server
+              start-server! options
           :examples $ []
           :schema $ quote $ Fn
             Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
             calcit.core/Option $ Map Tag Dynamic
             -> js-ffi.node/NodeServerHost
             :features :js-ffi
+        'create-typed-server! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
+          :examples $ []
+          :schema $ quote $ Fn
+            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+            , skir.schema/ServerOptions (-> js-ffi.node/NodeServerHost) (:features :js-ffi)
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
             skir.schema/ServerOptions :port 4000 :after-start
@@ -286,9 +283,7 @@
                   (and (tag? response) (= response :effect))
                     , &unit
                   true $ do (println |Response: response) (raise "|Unknown response!")
-              fn (err) (js/console.error err) (js-set res :status-code 500) (js-set res :status-message "|Server Error")
-                res .end! $ str (to-lispy-string err) &newline &newline
-                , &unit
+              fn (err) (write-server-error! res err)
           :examples $ []
           :schema $ quote $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost
             Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
@@ -345,6 +340,41 @@
             Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
             -> Unit
             :features :js-ffi
+        'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn reset-typed-req-handler! (handler)
+            reset! *req-handler $ Option :some $ fn (req res)
+              hint-fn $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
+              try
+                let
+                    action $ handler (req->edn req) res
+                  match action
+                    (skir.schema/Response response) (write-typed-response! res response)
+                    (skir.schema/DeferredResponse deferred)
+                        :start deferred
+                        fn (response) (write-typed-response! res response)
+                    (skir.schema/ResponseEffect effect) &unit
+                fn (err) (write-server-error! res err)
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn
+            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+            -> Unit
+            :features :js-ffi
+        'start-server! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn start-server! (options)
+            let
+                raw-server $ node/http-create-server $ fn (req res)
+                  match @*req-handler
+                    (:some active-handler) (active-handler req res)
+                    (:none)
+                      write-response! res $ {} (:code 503) (:body |No-request-handler)
+              node/server-listen! raw-server (:port options) (:host options)
+                fn ()
+                  (:after-start options) options
+                  , &unit
+              , raw-server
+          :examples $ []
+          :schema $ quote $ Fn skir.schema/ServerOptions (-> js-ffi.node/NodeServerHost) (:features :js-ffi)
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
             let
@@ -378,6 +408,21 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost Dynamic (-> Unit) (:features :js-ffi)
+        'write-server-error! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn write-server-error! (res err) (js/console.error err) (js-set res :status-code 500) (js-set res :status-message "|Server Error")
+            res .end! $ str (to-lispy-string err) &newline &newline
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost E (-> Unit) (:generics E) (:features :js-ffi)
+        'write-typed-response! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn write-typed-response! (res response)
+            write-response! res $ {}
+              :code $ :code response
+              :message $ .unwrap-or (:message response) |OK
+              :headers $ :headers response
+              :body $ .unwrap-or (:body response) |
+          :examples $ []
+          :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost skir.schema/Response (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.core
           :require (js-ffi.node :as node) (js-ffi.shared :as shared)
@@ -471,6 +516,13 @@
         :code $ quote $ ns skir.router
     'skir.schema $ %{} 'FileEntry
       :defs $ {}
+        'DeferredResponse $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct DeferredResponse
+            :start $ Fn
+              Fn skir.schema/Response $ -> Unit
+              -> Unit
+          :examples $ []
+          :schema $ quote StructDef
         'QueryValue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion QueryValue String (List String)
           :examples $ []
@@ -502,6 +554,14 @@
             :body $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
+        'ResponseAction $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResponseAction skir.schema/Response skir.schema/DeferredResponse skir.schema/ResponseEffect
+          :examples $ []
+          :schema $ quote UnionDef
+        'ResponseEffect $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum ResponseEffect (:handled)
+          :examples $ []
+          :schema $ quote EnumDef
         'ServerOptions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct ServerOptions (:port Number)
             :after-start $ Fn skir.schema/ServerOptions $ -> Unit
