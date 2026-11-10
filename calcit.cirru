@@ -534,6 +534,15 @@
               -> Unit
           :examples $ []
           :schema $ quote StructDef
+        'HeaderName $ %{} 'CodeEntry (:doc "|Header names accepted by a typed HTTP response.")
+          :code $ quote $ defunion HeaderName Tag String
+          :examples $ []
+          :schema $ quote UnionDef
+        'HeaderValue $ %{} 'CodeEntry
+          :doc "|Header values converted to text when writing a typed HTTP response."
+          :code $ quote $ defunion HeaderValue skir.schema/HeaderName Number Bool
+          :examples $ []
+          :schema $ quote UnionDef
         'QueryValue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion QueryValue String (List String)
           :examples $ []
@@ -561,10 +570,19 @@
         'Response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Response (:code Number)
             :message $ Option String
-            :headers $ Map Dynamic Dynamic
+            :headers $ Map skir.schema/HeaderName skir.schema/HeaderValue
             :body $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
+          :tests $ [] $ %{} 'TestEntry (:name |typed-number-and-bool-headers)
+            :code $ quote $ let
+                response $ Response :code 200 :message (Option :none) :headers
+                  {} (|x-count 7) (|x-enabled true)
+                  , :body $ Option :none
+              assert= (Option :some 7)
+                get (:headers response) |x-count
+              assert= (Option :some true)
+                get (:headers response) |x-enabled
         'ResponseAction $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion ResponseAction skir.schema/Response skir.schema/DeferredResponse skir.schema/ResponseEffect
           :examples $ []

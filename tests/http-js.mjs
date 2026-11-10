@@ -110,7 +110,7 @@ const typedServer = create_typed_server_$x_((request, response) => {
       response.write("partial body");
       throw new Error("after headers");
     default:
-      return reply(200, false, map("x-skir", "typed"));
+      return reply(200, false, map("x-skir", "typed", calcit.newTag("x-count"), 2, "x-enabled", false));
   }
 }, typedOptions);
 
@@ -123,6 +123,8 @@ try {
   const immediate = await request("/");
   assert.equal(immediate.status, 200);
   assert.equal(immediate.headers.get("x-skir"), "typed");
+  assert.equal(immediate.headers.get("x-count"), "2");
+  assert.equal(immediate.headers.get("x-enabled"), "false");
   assert.equal(await immediate.text(), "false");
   const deferred = await request("/later");
   assert.equal(deferred.status, 202);

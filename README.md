@@ -6,7 +6,7 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本项目配对 Calcit CLI 和 `@calcit/procs` **0.38.0**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.40.0**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS。
 
 新 handler 可用 `create-typed-server!` 注册，返回 `ResponseAction`。旧的 `create-server!` 与 `reset-req-handler!` 继续接收原有的 Map、回调、Promise 和 `:effect`。
 
@@ -28,6 +28,8 @@ HTTP 解码保留缺失参数、空字符串和重复参数的顺序。响应头
 ### 具名响应
 
 `ResponseAction` 允许返回 `Response`、`DeferredResponse` 或 `ResponseEffect :handled`。延迟响应的 `:start` 回调接收一个只接受 `Response` 的发送函数。已经直接写入 Node 响应时，返回 `ResponseEffect :handled`。用 `reset-typed-req-handler!` 热替换具名 handler。
+
+具名 `Response.headers` 使用 Tag 或 String 键，值使用 String、Tag、Number 或 Bool。其他值请先转成字符串，再构造具名响应。
 
 ```cirru.no-run
 skir.core/create-typed-server!
@@ -72,7 +74,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.38.0：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.40.0：
 
 ```sh
 caps --strict --ci
