@@ -17,7 +17,7 @@
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
-            skir/create-server! render! $ Option :some $ {}
+            skir/create-server! render! $ Some $ {}
               :after-start $ fn (options) (println |options options) (; run-task!)
             , &unit
           :examples $ []
@@ -80,7 +80,7 @@
                   fn (cb)
                     match (:original-request req)
                       (:some raw-request)
-                        collect-body-str raw-request $ Option :some $ fn (body)
+                        collect-body-str raw-request $ Some $ fn (body)
                           hint-fn $ Fn String $ -> Unit
                           println |BODY: body
                           cb $ {} (:code 200)
@@ -102,7 +102,7 @@
                   :headers $ {}
                   :body $ str "|404 page for " $ to-lispy-string page
           :examples $ []
-          :schema $ quote $ Fn skir.schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :js-ffi)
         'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router-rules
             []
@@ -153,7 +153,7 @@
         'collect-response-data! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-response-data! (res cb!) (node/response-body-text res cb!) &unit
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeIncomingResponseHost
+          :schema $ quote $ Fn node/NodeIncomingResponseHost
             Fn String $ -> Unit
             -> Unit
             :features :js-ffi
@@ -179,7 +179,7 @@
                     if (js-nullish? status-code) 0 $ js-ffi.contract/expect-number |response.statusCode status-code
                     , :message
                       js-nullish->option $ .-status-message res
-                      , :headers ({}) :body $ Option :some
+                      , :headers ({}) :body $ Some
                         match content-type
                           (:some kind)
                             match kind
@@ -207,10 +207,10 @@
     'skir.core $ %{} 'FileEntry
       :defs $ {}
         '*req-handler $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *req-handler (Option :none)
+          :code $ quote $ defref *req-handler None
           :examples $ []
           :schema $ quote $ Ref
-            Option $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
+            Option $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
         'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
@@ -239,16 +239,16 @@
               start-server! options
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
-            calcit.core/Option $ Map Tag Dynamic
-            -> js-ffi.node/NodeServerHost
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
+            Option $ Map Tag Dynamic
+            -> node/NodeServerHost
             :features :js-ffi
         'create-typed-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> skir.schema/ResponseAction
-            , skir.schema/ServerOptions (-> js-ffi.node/NodeServerHost) (:features :js-ffi)
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+            , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi)
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
             skir.schema/ServerOptions :port 4000 :after-start
@@ -259,6 +259,20 @@
               , :host |0.0.0.0
           :examples $ []
           :schema $ quote skir.schema/ServerOptions
+        'end-response-body! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn end-response-body! (res body)
+            res .end! $ cond
+                list? body
+                format-cirru-edn body
+              (map? body) (format-cirru-edn body)
+              (nil? body) |
+              (string? body) body
+              (tag? body) (to-lispy-string body)
+              (js/Array.isArray body) (js/JSON.stringify body)
+              true $ js/JSON.stringify body
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn node/NodeServerResponseHost Body (-> Unit) (:generics Body) (:features :js-ffi)
         'handle-request! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-request! (req res handler)
             try
@@ -285,8 +299,8 @@
                   true $ do (println |Response: response) (raise "|Unknown response!")
               fn (err) (write-server-error! res err)
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost
-            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
+          :schema $ quote $ Fn node/NodeRequestHost node/NodeServerResponseHost
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
             -> Unit
             :features :js-ffi
         'query-params->map $ %{} 'CodeEntry (:doc |)
@@ -307,7 +321,7 @@
                 , &unit
               deref result
           :examples $ []
-          :schema $ quote $ Fn js-ffi.shared/UrlSearchParamsHost
+          :schema $ quote $ Fn shared/UrlSearchParamsHost
             -> $ Map String skir.schema/QueryValue
             :features :js-ffi
         'req->edn $ %{} 'CodeEntry (:doc |)
@@ -326,23 +340,23 @@
                 match method-text (|GET :get) (|HEAD :head) (|POST :post) (|PUT :put) (|DELETE :delete) (|CONNECT :connect) (|OPTIONS :options) (|TRACE :trace) (|PATCH :patch) (_ :get)
                 , :url url :path
                   .unwrap-or (nth url-pieces 0) |
-                  , :querystring querystring :query query-data :headers (.-headers req) :body (Option :none) :original-request $ Option :some req
+                  , :querystring querystring :query query-data :headers (.-headers req) :body None :original-request $ Some req
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeRequestHost (-> skir.schema/Request) (:features :js-ffi)
+          :schema $ quote $ Fn node/NodeRequestHost (-> skir.schema/Request) (:features :js-ffi)
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
-            reset! *req-handler $ Option :some $ fn (req res)
+            reset! *req-handler $ Some $ fn (req res)
               hint-fn $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
               handle-request! req res handler
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> Dynamic
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
             -> Unit
             :features :js-ffi
         'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-typed-req-handler! (handler)
-            reset! *req-handler $ Option :some $ fn (req res)
+            reset! *req-handler $ Some $ fn (req res)
               hint-fn $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
               try
                 let
@@ -359,7 +373,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request js-ffi.node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
             -> Unit
             :features :js-ffi
         'start-server! $ %{} 'CodeEntry (:doc |)
@@ -376,7 +390,7 @@
                   , &unit
               , raw-server
           :examples $ []
-          :schema $ quote $ Fn skir.schema/ServerOptions (-> js-ffi.node/NodeServerHost) (:features :js-ffi)
+          :schema $ quote $ Fn skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi)
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
             let
@@ -395,21 +409,10 @@
                 let[] (key value)
                   decode-map-as pair $ List Dynamic
                   res .set-header! (key->str key) (key->str value)
-              res .end! $ match (get edn-res :body)
-                (:some body)
-                  cond
-                      list? body
-                      format-cirru-edn body
-                    (map? body) (format-cirru-edn body)
-                    (nil? body) |
-                    (string? body) body
-                    (tag? body) (to-lispy-string body)
-                    (js/Array.isArray body) (js/JSON.stringify body)
-                    true $ js/JSON.stringify body
-                (:none) |
+              end-response-body! res $ .unwrap-or (get edn-res :body) |
               , &unit
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn node/NodeServerResponseHost Input (-> Unit) (:generics Input) (:features :js-ffi)
         'write-server-error! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-server-error! (res err) (js/console.error err)
             when-not
@@ -423,16 +426,18 @@
                   res .end! $ str (to-lispy-string err) &newline &newline
             , &unit
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost E (-> Unit) (:generics E) (:features :js-ffi)
+          :schema $ quote $ Fn node/NodeServerResponseHost E (-> Unit) (:generics E) (:features :js-ffi)
         'write-typed-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-typed-response! (res response)
-            write-response! res $ {}
-              :code $ :code response
-              :message $ .unwrap-or (:message response) |OK
-              :headers $ :headers response
-              :body $ .unwrap-or (:body response) |
+            js-set res :status-code $ :code response
+            js-set res :status-message $ .unwrap-or (:message response) |OK
+            &doseq
+              pair $ &map:to-list $ :headers response
+              let[] (key value) pair $ res .set-header! (key->str key) (key->str value)
+            end-response-body! res $ .unwrap-or (:body response) |
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeServerResponseHost skir.schema/Response (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn node/NodeServerResponseHost skir.schema/Response (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.core
           :require (js-ffi.node :as node) (js-ffi.shared :as shared)
@@ -468,17 +473,17 @@
                   RoutePart :literal part
           :examples $ []
           :schema $ quote $ Fn String
-            -> $ List skir.router/RoutePart
+            -> $ List RoutePart
         'match-chunks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn match-chunks (result segments rule)
             cond
                 and (empty? segments) (empty? rule)
                 struct-with result $ :matches? true
               (and (empty? segments) (not (empty? rule)))
-                struct-with result $ :result $ Option :some (RouteRemainder :rule rule)
+                struct-with result $ :result $ Some (RouteRemainder :rule rule)
               (and (not (empty? segments)) (empty? rule))
                 struct-with result (:contains? true)
-                  :result $ Option :some $ RouteRemainder :path segments
+                  :result $ Some $ RouteRemainder :path segments
               true $ let
                   segment $
                     first segments
@@ -495,9 +500,9 @@
                   (:literal expected)
                     if (= segment expected)
                       recur result (rest segments) (rest rule)
-                      struct-with result $ :message $ Option :some ([] segment expected)
+                      struct-with result $ :message $ Some ([] segment expected)
           :examples $ []
-          :schema $ quote $ Fn skir.router/MatchResult (List String) (List skir.router/RoutePart) (-> skir.router/MatchResult)
+          :schema $ quote $ Fn MatchResult (List String) (List RoutePart) (-> MatchResult)
         'match-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn match-path (real-path rule-path)
             let
@@ -505,23 +510,23 @@
                   fn (segment)
                     hint-fn $ Fn String $ -> Bool
                     not $ blank? segment
-                initial $ MatchResult :matches? false :contains? false :rest (Option :none) :data ({}) :result (Option :none) :message $ Option :none
+                initial $ MatchResult :matches? false :contains? false :rest None :data ({}) :result None :message None
               match-chunks initial segments $ expand-rule rule-path
           :examples $ [] $ quote (match-path |/users/42 |users/:id)
-          :schema $ quote $ Fn String String (-> skir.router/MatchResult)
+          :schema $ quote $ Fn String String (-> MatchResult)
           :tests $ []
             %{} 'TestEntry (:name |matches-parameter)
               :code $ quote $ let
                   result $ match-path |/users/42 |users/:id
                 assert= true $ :matches? result
-                assert= (Option :some |42)
+                assert= (Some |42)
                   get (:data result) :id
             %{} 'TestEntry (:name |reports-mismatch)
               :code $ quote $ let
                   result $ match-path |/users |posts
                 assert= false $ :matches? result
                 assert=
-                  Option :some $ [] |users |posts
+                  Some $ [] |users |posts
                   :message result
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.router
@@ -576,12 +581,12 @@
           :schema $ quote StructDef
           :tests $ [] $ %{} 'TestEntry (:name |typed-number-and-bool-headers)
             :code $ quote $ let
-                response $ Response :code 200 :message (Option :none) :headers
+                response $ Response :code 200 :message None :headers
                   {} (|x-count 7) (|x-enabled true)
-                  , :body $ Option :none
-              assert= (Option :some 7)
+                  , :body None
+              assert= (Some 7)
                 get (:headers response) |x-count
-              assert= (Option :some true)
+              assert= (Some true)
                 get (:headers response) |x-enabled
         'ResponseAction $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion ResponseAction skir.schema/Response skir.schema/DeferredResponse skir.schema/ResponseEffect
@@ -599,14 +604,14 @@
           :schema $ quote StructDef
         'request $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def request
-            Request :method :get :url | :path | :querystring | :query ({}) :headers (skir.util/empty-headers) :body (Option :none) :original-request $ Option :none
+            Request :method :get :url | :path | :querystring | :query ({}) :headers (skir.util/empty-headers) :body None :original-request None
           :examples $ []
-          :schema $ quote skir.schema/Request
+          :schema $ quote Request
         'response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def response
-            Response :code 200 :message (Option :none) :headers ({}) :body $ Option :none
+            Response :code 200 :message None :headers ({}) :body None
           :examples $ []
-          :schema $ quote skir.schema/Response
+          :schema $ quote Response
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.schema
     'skir.util $ %{} 'FileEntry
@@ -620,9 +625,9 @@
           :doc "|based on https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction"
           :code $ quote $ defn collect-body-str (request cb) (node/request-body-text request cb)
           :examples $ []
-          :schema $ quote $ Fn js-ffi.node/NodeRequestHost
-            calcit.core/Option $ Fn String $ -> Unit
-            -> js-ffi.shared/PromiseHost
+          :schema $ quote $ Fn node/NodeRequestHost
+            Option $ Fn String $ -> Unit
+            -> shared/PromiseHost
             :features :js-ffi
         'delay! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn delay! (duration task)
@@ -657,7 +662,7 @@
               Fn T $ -> Unit
               Fn E $ -> Unit
               -> Unit
-            -> js-ffi.shared/PromiseHost
+            -> shared/PromiseHost
             :generics T E
             :features :js-ffi
         'promise? $ %{} 'CodeEntry
