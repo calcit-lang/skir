@@ -239,9 +239,10 @@
               start-server! options
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
             Option $ Map Tag Dynamic
             -> node/NodeServerHost
+            :generics R
             :features :js-ffi
         'create-typed-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
@@ -300,8 +301,9 @@
               fn (err) (write-server-error! res err)
           :examples $ []
           :schema $ quote $ Fn node/NodeRequestHost node/NodeServerResponseHost
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
             -> Unit
+            :generics R
             :features :js-ffi
         'query-params->map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn query-params->map (value)
@@ -351,8 +353,9 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> Dynamic
+            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
             -> Unit
+            :generics R
             :features :js-ffi
         'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-typed-req-handler! (handler)
