@@ -669,7 +669,7 @@
           :doc "|based on https://stackoverflow.com/questions/27746304/how-do-i-tell-if-an-object-is-a-promise"
           :code $ quote $ defn promise? (x) (shared/promise? x)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool) (:features :js-ffi)
+          :schema $ quote $ Fn T (-> Bool) (:generics T) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.util
           :require (js-ffi.node :as node) (js-ffi.shared :as shared)
