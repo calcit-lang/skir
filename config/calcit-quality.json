@@ -1,0 +1,32 @@
+{
+  "coverage": {
+    "skir.app.main/render!": "partial",
+    "skir.client/get!": "partial",
+    "skir.core/create-server!": "partial",
+    "skir.core/handle-request!": "partial",
+    "skir.core/reset-req-handler!": "partial",
+    "skir.util/promise?": "partial"
+  },
+  "weak": {
+    "skir.app.main/render!": {
+      "schema-dynamic/intentional-js-ffi": 1
+    },
+    "skir.client/get!": {
+      "schema-dynamic/js-ffi-non-host": 1
+    },
+    "skir.core/create-server!": {
+      "schema-dynamic/js-ffi-non-host": 2,
+      "unsafe-coerce/explicit-unsafe": 1
+    },
+    "skir.core/handle-request!": {
+      "schema-dynamic/intentional-js-ffi": 1,
+      "unsafe-coerce/explicit-unsafe": 2
+    },
+    "skir.core/reset-req-handler!": {
+      "schema-dynamic/js-ffi-non-host": 1
+    },
+    "skir.util/promise?": {
+      "schema-dynamic/js-ffi-non-host": 1
+    }
+  }
+}
