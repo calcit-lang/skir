@@ -310,7 +310,7 @@
             let
                 result $ ref $ assert-type ({}) (Map String skir.schema/QueryValue)
               value .for-each! $ fn (item key _parent)
-                hint-fn $ Fn String String js-ffi.shared/UrlSearchParamsHost $ -> Unit
+                hint-fn $ Fn String String shared/UrlSearchParamsHost $ -> Unit
                 swap! result assoc key $ assert-type
                   match
                     get (deref result) key
@@ -348,7 +348,7 @@
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
             reset! *req-handler $ Some $ fn (req res)
-              hint-fn $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
+              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
               handle-request! req res handler
             , &unit
           :examples $ []
@@ -360,7 +360,7 @@
         'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-typed-req-handler! (handler)
             reset! *req-handler $ Some $ fn (req res)
-              hint-fn $ Fn js-ffi.node/NodeRequestHost js-ffi.node/NodeServerResponseHost $ -> Unit
+              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
               try
                 let
                     action $ handler (req->edn req) res
@@ -470,7 +470,7 @@
           :code $ quote $ defn expand-rule (rule-string)
             .map (split rule-string |/)
               fn (part)
-                hint-fn $ Fn String $ -> skir.router/RoutePart
+                hint-fn $ Fn String $ -> RoutePart
                 if (starts-with? part |:)
                   RoutePart :parameter $ to-tag $ .slice part 1
                   RoutePart :literal part
@@ -566,7 +566,7 @@
           :tests $ [] $ %{} 'TestEntry (:name |typed-query-union-handler)
             :code $ quote $ let
                 read-values $ fn (req)
-                  hint-fn $ Fn skir.schema/Request $ -> (List String)
+                  hint-fn $ Fn Request $ -> (List String)
                   match
                     get (:query req) |a
                     (:some value)
