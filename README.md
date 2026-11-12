@@ -6,9 +6,10 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 ### 使用者影响
 
-本项目配对 Calcit CLI 和 `@calcit/procs` **0.41.1**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.42.1**，使用正式 Router **0.12.2**、Respo **0.19.5** 与 JS-FFI **0.2.13**。消费者升级依赖图后需重新生成 JS。
 
 新 handler 可用 `create-typed-server!` 注册，返回 `ResponseAction`。旧的 `create-server!` 与 `reset-req-handler!` 继续接收原有的 Map、回调、Promise 和 `:effect`。
+`get!` 与旧版 `create-server!` 的选项 Map 改用泛型值类型，保留现有调用形态和运行时选项解析。
 
 Query 参数值现在声明为字符串或字符串列表的 union。单次参数返回字符串，重复参数返回保持出现顺序的字符串列表。Demo 按 Router 的 Struct 字段读取路由路径。
 
@@ -74,7 +75,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.41.1：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.42.1：
 
 ```sh
 caps --strict --ci

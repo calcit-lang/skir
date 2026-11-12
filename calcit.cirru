@@ -21,11 +21,11 @@
               :after-start $ fn (options) (println |options options) (; run-task!)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (clear!) (println |Reload!) (run-task!)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io)
         'render! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render! (req res) (; println)
             ; println |Requests: $ to-lispy-string req
@@ -102,7 +102,7 @@
                   :headers $ {}
                   :body $ str "|404 page for " $ to-lispy-string page
           :examples $ []
-          :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :io :js-ffi)
         'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router-rules
             []
@@ -121,7 +121,7 @@
         'run-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-task! () (try-request!)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io)
         'try-request! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn try-request! ()
             fetch! |http://localhost:4000 $ fn (response) (println)
@@ -138,7 +138,7 @@
               , &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns skir.app.main
           :require (skir.core :as skir) (skir.schema :as schema) (js-ffi.shared :as shared)
@@ -189,9 +189,10 @@
                               _ text
                           (:none) text
           :examples $ []
-          :schema $ quote $ Fn String (Map Tag Dynamic)
+          :schema $ quote $ Fn String (Map Tag V)
             Fn skir.schema/Response $ -> Unit
             -> JsObject
+            :generics V
             :features :js-ffi
         'post! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn post! (url data options cb) &unit
@@ -240,16 +241,16 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn skir.schema/Request node/NodeServerResponseHost $ -> R
-            Option $ Map Tag Dynamic
+            Option $ Map Tag V
             -> node/NodeServerHost
-            :generics R
-            :features :js-ffi
+            :generics R V
+            :features :io :js-ffi :state
         'create-typed-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
           :examples $ []
           :schema $ quote $ Fn
             Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
-            , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi)
+            , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi :state)
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
             skir.schema/ServerOptions :port 4000 :after-start
@@ -304,7 +305,7 @@
             Fn skir.schema/Request node/NodeServerResponseHost $ -> R
             -> Unit
             :generics R
-            :features :js-ffi
+            :features :io :js-ffi
         'query-params->map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn query-params->map (value)
             let
@@ -356,7 +357,7 @@
             Fn skir.schema/Request node/NodeServerResponseHost $ -> R
             -> Unit
             :generics R
-            :features :js-ffi
+            :features :io :js-ffi :state
         'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-typed-req-handler! (handler)
             reset! *req-handler $ Some $ fn (req res)
@@ -378,7 +379,7 @@
           :schema $ quote $ Fn
             Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
             -> Unit
-            :features :js-ffi
+            :features :js-ffi :state
         'start-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn start-server! (options)
             let
@@ -393,7 +394,7 @@
                   , &unit
               , raw-server
           :examples $ []
-          :schema $ quote $ Fn skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi)
+          :schema $ quote $ Fn skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi :state)
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
             let
