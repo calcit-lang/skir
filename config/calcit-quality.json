@@ -11,11 +11,7 @@
     "skir.app.main/render!": {
       "schema-dynamic/intentional-js-ffi": 1
     },
-    "skir.client/get!": {
-      "schema-dynamic/js-ffi-non-host": 1
-    },
     "skir.core/create-server!": {
-      "schema-dynamic/js-ffi-non-host": 2,
       "unsafe-coerce/explicit-unsafe": 1
     },
     "skir.core/handle-request!": {
