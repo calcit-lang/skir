@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 
+import { render_$x_ } from "../js-out/skir.app.main.mjs";
 import * as calcit from "../js-out/calcit.core.mjs";
 import { create_server_$x_, create_typed_server_$x_, reset_typed_req_handler_$x_ } from "../js-out/skir.core.mjs";
 import { DeferredResponse, Response, ResponseEffect, ServerOptions } from "../js-out/skir.schema.mjs";
@@ -66,6 +67,11 @@ try {
     ["1", "3"],
   );
   assert.equal(calcit.option_$o_unwrap(calcit.get(queryAt(2), "empty")), "");
+  const renderDemo = (path) => render_$x_(calcit.assoc(requests[0], calcit.to_tag("url"), path), null);
+  assert.equal(calcit.option_$o_unwrap(calcit.get(renderDemo("/json"), tags.code)), 200);
+  for (const path of ["/", "/missing", "/home/tail"]) {
+    assert.equal(calcit.option_$o_unwrap(calcit.get(renderDemo(path), tags.code)), 404);
+  }
   console.log("skir HTTP JS behavior passed");
 } finally {
   if (server.listening) {
