@@ -32,75 +32,67 @@
             ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
             ; js/console.log (:original-request req) res
             let
-                router $ parse-address (:url req) router-rules
-                page $ :path router
+                page $ :path $ parse-address-typed (:url req) router-rules
                 route $ .unwrap-or (nth page 0)
-                  :: :404 $ []
-                parse-result $ match-path (:url req) |a/:b
-              ; println |Parsed: router parse-result page
+                  respo-router.schema/RouteStep :unmatched $ []
               println |Route: route
               match route
-                (:callback)
-                  fn (send!)
-                    delay! 3 $ fn ()
-                      send! $ {} (:code 200)
-                        :headers $ {}
-                        :body "|slow response finished!"
-                      , &unit
-                (:json)
-                  {} (:code 200)
-                    :headers $ {} $ :Content-Type :application/json
-                    :body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
-                (:edn)
-                  {} (:code 200)
-                    :headers $ {} $ :Content-Type :application/edn
-                    :body $ format-cirru-edn $ {} (:status :ok) (:message |good)
-                (:html)
-                  {} (:code 200)
-                    :headers $ {} $ :Content-Type :text/html
-                    :body "|<div><h2>Heading</h2> this is HTML</div>"
-                (:promise)
-                  promise-create $ fn (resolve reject)
-                    hint-fn $ Fn
-                      Fn (Map Tag Dynamic) (-> Unit)
-                      Fn Dynamic $ -> Unit
-                      -> Unit
-                    delay! 3 $ fn ()
-                      resolve $ {} (:code 200)
-                        :headers $ {}
-                        :body "|Message from promise"
-                      , &unit
-                    , &unit
-                (:effect)
-                  do (println |effect)
-                    {} (:code 202)
-                      :headers $ {}
-                      :body :effect
-                (:body)
-                  fn (cb)
-                    match (:original-request req)
-                      (:some raw-request)
-                        collect-body-str raw-request $ Some $ fn (body)
-                          hint-fn $ Fn String $ -> Unit
-                          println |BODY: body
-                          cb $ {} (:code 200)
-                            :headers $ {}
-                            :body :body
-                          , &unit
-                      (:none)
-                        cb $ {} (:code 400)
+                (:matched entry)
+                  match (:name entry)
+                    :callback $ fn (send!)
+                      delay! 3 $ fn ()
+                        send! $ {} (:code 200)
                           :headers $ {}
-                          :body "|Missing request body source"
-                (:error)
-                  {} $ :body |error
-                (:throw-error) (raise "|Custom error")
-                (:404 paths)
+                          :body "|slow response finished!"
+                        , &unit
+                    :json $ {} (:code 200)
+                      :headers $ {} $ :Content-Type :application/json
+                      :body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
+                    :edn $ {} (:code 200)
+                      :headers $ {} $ :Content-Type :application/edn
+                      :body $ format-cirru-edn $ {} (:status :ok) (:message |good)
+                    :html $ {} (:code 200)
+                      :headers $ {} $ :Content-Type :text/html
+                      :body "|<div><h2>Heading</h2> this is HTML</div>"
+                    :promise $ promise-create $ fn (resolve reject)
+                      hint-fn $ Fn
+                        Fn (Map Tag Dynamic) (-> Unit)
+                        Fn Dynamic $ -> Unit
+                        -> Unit
+                      delay! 3 $ fn ()
+                        resolve $ {} (:code 200)
+                          :headers $ {}
+                          :body "|Message from promise"
+                        , &unit
+                      , &unit
+                    :effect $ do (println |effect)
+                      {} (:code 202)
+                        :headers $ {}
+                        :body :effect
+                    :body $ fn (cb)
+                      match (:original-request req)
+                        (:some raw-request)
+                          collect-body-str raw-request $ Some $ fn (body)
+                            hint-fn $ Fn String $ -> Unit
+                            println |BODY: body
+                            cb $ {} (:code 200)
+                              :headers $ {}
+                              :body :body
+                            , &unit
+                        (:none)
+                          cb $ {} (:code 400)
+                            :headers $ {}
+                            :body "|Missing request body source"
+                    :error $ {} $ :body |error
+                    :throw-error $ raise "|Custom error"
+                    _ $ {} (:code 404) (:message "|Page not found")
+                      :headers $ {}
+                      :body $ str "|404 page for " $ to-lispy-string
+                        :path $ parse-address (:url req) router-rules
+                (:unmatched paths)
                   {} (:code 404) (:message "|No matched route")
                     :headers $ {}
                     :body $ str paths
-                _ $ {} (:code 404) (:message "|Page not found")
-                  :headers $ {}
-                  :body $ str "|404 page for " $ to-lispy-string page
           :examples $ []
           :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :io :js-ffi)
         'router-rules $ %{} 'CodeEntry (:doc |)
@@ -144,10 +136,9 @@
           :require (skir.core :as skir) (skir.schema :as schema) (js-ffi.shared :as shared)
             skir.client :refer $ fetch!
             skir.util :refer $ clear! delay! collect-body-str promise-create
-            respo-router.parser :refer $ parse-address
+            respo-router.parser :refer $ parse-address-typed parse-address
             |fs :as fs
             |path :as path
-            skir.router :refer $ match-path
     'skir.client $ %{} 'FileEntry
       :defs $ {}
         'collect-response-data! $ %{} 'CodeEntry (:doc |)
