@@ -88,7 +88,11 @@
                     _ $ {} (:code 404) (:message "|Page not found")
                       :headers $ {}
                       :body $ str "|404 page for " $ to-lispy-string
-                        :path $ parse-address (:url req) router-rules
+                        map page $ fn (step)
+                          match step
+                            (:matched matched)
+                              list-to-tuple (:name matched) (:params matched)
+                            (:unmatched paths) (:: :404 paths)
                 (:unmatched paths)
                   {} (:code 404) (:message "|No matched route")
                     :headers $ {}
@@ -136,7 +140,7 @@
           :require (skir.core :as skir) (skir.schema :as schema) (js-ffi.shared :as shared)
             skir.client :refer $ fetch!
             skir.util :refer $ clear! delay! collect-body-str promise-create
-            respo-router.parser :refer $ parse-address-typed parse-address
+            respo-router.parser :refer $ parse-address-typed list-to-tuple
             |fs :as fs
             |path :as path
     'skir.client $ %{} 'FileEntry
