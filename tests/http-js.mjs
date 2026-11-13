@@ -72,6 +72,10 @@ try {
   for (const path of ["/", "/missing", "/home/tail"]) {
     assert.equal(calcit.option_$o_unwrap(calcit.get(renderDemo(path), tags.code)), 404);
   }
+  assert.equal(
+    calcit.option_$o_unwrap(calcit.get(renderDemo("/home/tail"), tags.body)),
+    "404 page for ([] (%:: _ :home) (%:: _ :404 ([] |tail)))",
+  );
   console.log("skir HTTP JS behavior passed");
 } finally {
   if (server.listening) {
