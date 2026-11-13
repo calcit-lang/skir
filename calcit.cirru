@@ -17,8 +17,10 @@
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
-            skir/create-server! render! $ Some $ {}
-              :after-start $ fn (options) (println |options options) (; run-task!)
+            skir/create-typed-server! render! $ .assoc skir/default-options :after-start $ fn (options)
+              hint-fn $ Fn schema/ServerOptions $ -> Unit
+              println |options options
+              , &unit
             , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :state)
@@ -27,7 +29,7 @@
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io)
         'render! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render! (req res) (; println)
+          :code $ quote $ defn render! (req _res)
             ; println |Requests: $ to-lispy-string req
             ; println |Url: (:url req) (:path req) (:querystring req) (:query req)
             ; js/console.log (:original-request req) res
@@ -39,66 +41,70 @@
               match route
                 (:matched entry)
                   match (:name entry)
-                    :callback $ fn (send!)
-                      delay! 3 $ fn ()
-                        send! $ {} (:code 200)
-                          :headers $ {}
-                          :body "|slow response finished!"
+                    :callback $ assert-type
+                      schema/DeferredResponse :start $ fn (send!)
+                        delay! 3 $ fn ()
+                          send! $ schema/Response :code 200 :message None :headers ({}) :body $ Some "|slow response finished!"
+                          , &unit
+                      , schema/ResponseAction
+                    :json $ assert-type
+                      let
+                          body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
+                        schema/Response :code 200 :message None :headers
+                          {} $ :Content-Type :application/json
+                          , :body $ Some body
+                      , schema/ResponseAction
+                    :edn $ assert-type
+                      let
+                          body $ format-cirru-edn $ {} (:status :ok) (:message |good)
+                        schema/Response :code 200 :message None :headers
+                          {} $ :Content-Type :application/edn
+                          , :body $ Some body
+                      , schema/ResponseAction
+                    :html $ assert-type
+                      schema/Response :code 200 :message None :headers ({}) :body $ Some "|<div><h2>Heading</h2> this is HTML</div>"
+                      , schema/ResponseAction
+                    :promise $ assert-type
+                      schema/DeferredResponse :start $ fn (send!)
+                        delay! 3 $ fn ()
+                          send! $ schema/Response :code 200 :message None :headers ({}) :body $ Some "|Message from promise"
+                          , &unit
+                      , schema/ResponseAction
+                    :effect $ assert-type
+                      do (println |effect)
+                        schema/Response :code 202 :message None :headers ({}) :body $ Some :effect
+                      , schema/ResponseAction
+                    :body $ assert-type
+                      schema/DeferredResponse :start $ fn (send!)
+                        match (:original-request req)
+                          (:some raw-request)
+                            collect-body-str raw-request $ Some $ fn (body)
+                              hint-fn $ Fn String $ -> Unit
+                              println |BODY: body
+                              send! $ schema/Response :code 200 :message None :headers ({}) :body $ Some :body
+                              , &unit
+                          (:none)
+                            send! $ schema/Response :code 400 :message None :headers ({}) :body $ Some "|Missing request body source"
                         , &unit
-                    :json $ {} (:code 200)
-                      :headers $ {} $ :Content-Type :application/json
-                      :body $ js/JSON.stringify $ js-object (:status :ok) (:message |good)
-                    :edn $ {} (:code 200)
-                      :headers $ {} $ :Content-Type :application/edn
-                      :body $ format-cirru-edn $ {} (:status :ok) (:message |good)
-                    :html $ {} (:code 200)
-                      :headers $ {} $ :Content-Type :text/html
-                      :body "|<div><h2>Heading</h2> this is HTML</div>"
-                    :promise $ promise-create $ fn (resolve reject)
-                      hint-fn $ Fn
-                        Fn (Map Tag Dynamic) (-> Unit)
-                        Fn Dynamic $ -> Unit
-                        -> Unit
-                      delay! 3 $ fn ()
-                        resolve $ {} (:code 200)
-                          :headers $ {}
-                          :body "|Message from promise"
-                        , &unit
-                      , &unit
-                    :effect $ do (println |effect)
-                      {} (:code 202)
-                        :headers $ {}
-                        :body :effect
-                    :body $ fn (cb)
-                      match (:original-request req)
-                        (:some raw-request)
-                          collect-body-str raw-request $ Some $ fn (body)
-                            hint-fn $ Fn String $ -> Unit
-                            println |BODY: body
-                            cb $ {} (:code 200)
-                              :headers $ {}
-                              :body :body
-                            , &unit
-                        (:none)
-                          cb $ {} (:code 400)
-                            :headers $ {}
-                            :body "|Missing request body source"
-                    :error $ {} $ :body |error
+                      , schema/ResponseAction
+                    :error $ assert-type
+                      schema/Response :code 200 :message None :headers ({}) :body $ Some |error
+                      , schema/ResponseAction
                     :throw-error $ raise "|Custom error"
-                    _ $ {} (:code 404) (:message "|Page not found")
-                      :headers $ {}
-                      :body $ str "|404 page for " $ to-lispy-string
-                        map page $ fn (step)
+                    _ $ assert-type
+                      schema/Response :code 404 :message (Some "|Page not found") :headers ({}) :body $ Some $ str "|404 page for "
+                        to-lispy-string $ map page $ fn (step)
                           match step
                             (:matched matched)
                               list-to-tuple (:name matched) (:params matched)
                             (:unmatched paths) (:: :404 paths)
+                      , schema/ResponseAction
                 (:unmatched paths)
-                  {} (:code 404) (:message "|No matched route")
-                    :headers $ {}
-                    :body $ str paths
+                  assert-type
+                    schema/Response :code 404 :message (Some "|No matched route") :headers ({}) :body $ Some $ str paths
+                    , schema/ResponseAction
           :examples $ []
-          :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> Dynamic) (:features :io :js-ffi)
+          :schema $ quote $ Fn schema/Request js-ffi.node/NodeServerResponseHost (-> schema/ResponseAction) (:features :io :js-ffi)
         'router-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router-rules
             []

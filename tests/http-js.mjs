@@ -68,12 +68,12 @@ try {
   );
   assert.equal(calcit.option_$o_unwrap(calcit.get(queryAt(2), "empty")), "");
   const renderDemo = (path) => render_$x_(calcit.assoc(requests[0], calcit.to_tag("url"), path), null);
-  assert.equal(calcit.option_$o_unwrap(calcit.get(renderDemo("/json"), tags.code)), 200);
+  assert.equal(calcit._$n_struct_$o_get(renderDemo("/json"), tags.code), 200);
   for (const path of ["/", "/missing", "/home/tail"]) {
-    assert.equal(calcit.option_$o_unwrap(calcit.get(renderDemo(path), tags.code)), 404);
+    assert.equal(calcit._$n_struct_$o_get(renderDemo(path), tags.code), 404);
   }
   assert.equal(
-    calcit.option_$o_unwrap(calcit.get(renderDemo("/home/tail"), tags.body)),
+    calcit.option_$o_unwrap(calcit._$n_struct_$o_get(renderDemo("/home/tail"), tags.body)),
     "404 page for ([] (%:: _ :home) (%:: _ :404 ([] |tail)))",
   );
   console.log("skir HTTP JS behavior passed");
