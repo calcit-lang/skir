@@ -100,6 +100,8 @@ const typedOptions = struct(
 );
 const typedServer = create_typed_server_$x_((request, response) => {
   switch (calcit._$n_struct_$o_get(request, typedTags.path)) {
+    case "/html":
+      return render_$x_(request, response);
     case "/later":
       return struct(DeferredResponse, typedTags.start, (send) => {
         setImmediate(() => send(reply(202, "deferred")));
@@ -136,6 +138,10 @@ try {
   assert.equal(immediate.headers.get("x-count"), "2");
   assert.equal(immediate.headers.get("x-enabled"), "false");
   assert.equal(await immediate.text(), "false");
+  const html = await request("/html");
+  assert.equal(html.status, 200);
+  assert.equal(html.headers.get("content-type"), "text/html");
+  assert.equal(await html.text(), "<div><h2>Heading</h2> this is HTML</div>");
   const deferred = await request("/later");
   assert.equal(deferred.status, 202);
   assert.equal(await deferred.text(), "deferred");

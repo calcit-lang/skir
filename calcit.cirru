@@ -62,7 +62,9 @@
                           , :body $ Some body
                       , schema/ResponseAction
                     :html $ assert-type
-                      schema/Response :code 200 :message None :headers ({}) :body $ Some "|<div><h2>Heading</h2> this is HTML</div>"
+                      schema/Response :code 200 :message None :headers
+                        {} $ :Content-Type :text/html
+                        , :body $ Some "|<div><h2>Heading</h2> this is HTML</div>"
                       , schema/ResponseAction
                     :promise $ assert-type
                       schema/DeferredResponse :start $ fn (send!)
