@@ -439,8 +439,17 @@
             js-set res :status-code $ :code response
             js-set res :status-message $ .unwrap-or (:message response) |OK
             &doseq
-              pair $ &map:to-list $ :headers response
-              let[] (key value) pair $ res .set-header! (key->str key) (key->str value)
+              entry $ map-entries $ :headers response
+              let
+                  name $ match entry.:key
+                    (Tag key) (to-string key)
+                    (String key) key
+                  text $ match entry.:value
+                    (Tag value) (to-string value)
+                    (String value) value
+                    (Number value) (str value)
+                    (Bool value) (str value)
+                res .set-header! name text
             end-response-body! res $ .unwrap-or (:body response) |
             , &unit
           :examples $ []
