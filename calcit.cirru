@@ -151,6 +151,7 @@
             respo-router.parser :refer $ parse-address-typed list-to-tuple
             |fs :as fs
             |path :as path
+            skir.router :as router
     'skir.client $ %{} 'FileEntry
       :defs $ {}
         'collect-response-data! $ %{} 'CodeEntry (:doc |)
@@ -252,8 +253,8 @@
           :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
-            , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi :state)
+            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io)
+            , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :io :js-ffi :state)
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
             skir.schema/ServerOptions :port 4000 :after-start
@@ -380,9 +381,9 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> skir.schema/ResponseAction
+            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io)
             -> Unit
-            :features :js-ffi :state
+            :features :io :js-ffi :state
         'start-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn start-server! (options)
             let
