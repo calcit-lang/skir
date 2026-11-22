@@ -61,6 +61,7 @@ jobs:
 
     - name: Test router behavior and documentation
       run: |
+        calcit calcit.cirru test skir.core/create-server! --require-match --summary-only --format json
         calcit calcit.cirru test skir.router/match-path --require-match --summary-only --format json
         calcit calcit.cirru test skir.schema --require-match --summary-only --format json
         calcit calcit.cirru analyze check-examples --ns skir.router

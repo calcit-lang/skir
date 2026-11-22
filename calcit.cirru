@@ -215,7 +215,7 @@
           :code $ quote $ defref *req-handler None
           :examples $ []
           :schema $ quote $ Ref
-            Option $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
+            Option $ Fn node/NodeRequestHost node/NodeServerResponseHost (-> Unit) (:features :io :js-ffi :state)
         'create-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-server! (handler user-options) (reset-req-handler! handler)
             let
@@ -244,16 +244,32 @@
               start-server! options
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
+            Fn skir.schema/Request node/NodeServerResponseHost (-> R) (:features :io :js-ffi :state)
             Option $ Map Tag V
             -> node/NodeServerHost
             :generics R V
             :features :io :js-ffi :state
+          :tests $ [] $ %{} 'TestEntry (:name |effectful-handler-contract)
+            :code $ quote $ let
+                *seen $ ref 0
+                handler $ fn (req res)
+                  hint-fn $ Fn skir.schema/Request node/NodeServerResponseHost
+                    -> $ Map Tag Number
+                    :features :io :state
+                  swap! *seen inc
+                  println |handled
+                  {} $ :code 200
+                register $ fn ()
+                  hint-fn $ Fn (-> node/NodeServerHost) (:features :io :state :js-ffi)
+                  reset-req-handler! handler
+                  create-server! handler None
+              assert= true $ fn? register
+            :tags $ #{} :unit
         'create-typed-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-typed-server! (handler options) (reset-typed-req-handler! handler) (start-server! options)
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io)
+            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io :js-ffi :state)
             , skir.schema/ServerOptions (-> node/NodeServerHost) (:features :io :js-ffi :state)
         'default-options $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-options
@@ -306,10 +322,10 @@
               fn (err) (write-server-error! res err)
           :examples $ []
           :schema $ quote $ Fn node/NodeRequestHost node/NodeServerResponseHost
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
+            Fn skir.schema/Request node/NodeServerResponseHost (-> R) (:features :io :js-ffi :state)
             -> Unit
             :generics R
-            :features :io :js-ffi
+            :features :io :js-ffi :state
         'query-params->map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn query-params->map (value)
             let
@@ -353,19 +369,19 @@
         'reset-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-req-handler! (handler)
             reset! *req-handler $ Some $ fn (req res)
-              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
+              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost (-> Unit) (:features :io :state :js-ffi)
               handle-request! req res handler
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost $ -> R
+            Fn skir.schema/Request node/NodeServerResponseHost (-> R) (:features :io :js-ffi :state)
             -> Unit
             :generics R
             :features :io :js-ffi :state
         'reset-typed-req-handler! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-typed-req-handler! (handler)
             reset! *req-handler $ Some $ fn (req res)
-              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost $ -> Unit
+              hint-fn $ Fn node/NodeRequestHost node/NodeServerResponseHost (-> Unit) (:features :io :state :js-ffi)
               try
                 let
                     action $ handler (req->edn req) res
@@ -381,7 +397,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io)
+            Fn skir.schema/Request node/NodeServerResponseHost (-> skir.schema/ResponseAction) (:features :io :js-ffi :state)
             -> Unit
             :features :io :js-ffi :state
         'start-server! $ %{} 'CodeEntry (:doc |)
@@ -398,7 +414,7 @@
                   , &unit
               , raw-server
           :examples $ []
-          :schema $ quote $ Fn skir.schema/ServerOptions (-> node/NodeServerHost) (:features :js-ffi :state)
+          :schema $ quote $ Fn skir.schema/ServerOptions (-> node/NodeServerHost) (:features :io :js-ffi :state)
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
             let
