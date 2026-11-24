@@ -8,7 +8,7 @@ Skir - an over-simplified HTTP Node.js server toolkit
 
 请求处理器可显式声明 IO、状态和 JS FFI 效果；服务器注册和热重载入口保留相应效果。原有纯处理器和同步、异步响应形式仍受支持。
 
-本项目配对 Calcit CLI 和 `@calcit/procs` **0.44.0**，使用正式 Router **0.12.11**、Respo **0.19.13** 与 JS-FFI **0.2.19**。消费者升级依赖图后需重新生成 JS。
+本项目配对 Calcit CLI 和 `@calcit/procs` **0.45.0**，使用正式 Router **0.12.11**、Respo **0.19.13** 与 JS-FFI **0.2.19**。消费者升级依赖图后需重新生成 JS。
 
 新 handler 可用 `create-typed-server!` 注册，返回 `ResponseAction`。旧的 `create-server!` 与 `reset-req-handler!` 继续接收原有的 Map、回调、Promise 和 `:effect`。
 `get!` 与旧版 `create-server!` 的选项 Map 改用泛型值类型，保留现有调用形态和运行时选项解析。
@@ -77,7 +77,7 @@ cond
 
 ### Development
 
-使用 Node 24、Yarn 4.18.0 和 Calcit 0.44.0：
+使用 Node 24、Yarn 4.18.0 和 Calcit 0.45.0：
 
 ```sh
 caps --strict --ci
