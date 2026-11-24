@@ -290,7 +290,8 @@
               (nil? body) |
               (string? body) body
               (tag? body) (to-lispy-string body)
-              (js/Array.isArray body) (js/JSON.stringify body)
+              (contract/expect-bool |Array.isArray (js/Array.isArray body))
+                js/JSON.stringify body
               true $ js/JSON.stringify body
             , &unit
           :examples $ []
