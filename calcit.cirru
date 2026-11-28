@@ -226,15 +226,19 @@
                 host-value $ get options-map :host
                 after-start-value $ get options-map :after-start
                 options $ skir.schema/ServerOptions :port
-                  .fold port-value
-                    fn () $ :port default-options
-                    fn (value)
-                      if (number? value) value $ :port default-options
+                  match port-value
+                    (:some value)
+                      match (try-decode-map-as value Number)
+                        (:ok port) port
+                        (:err _) (:port default-options)
+                    (:none) (:port default-options)
                   , :host
-                    .fold host-value
-                      fn () $ :host default-options
-                      fn (value)
-                        if (string? value) value $ :host default-options
+                    match host-value
+                      (:some value)
+                        match (try-decode-map-as value String)
+                          (:ok host) host
+                          (:err _) (:host default-options)
+                      (:none) (:host default-options)
                     , :after-start $ match after-start-value
                       (:none) (:after-start default-options)
                       (:some value)
@@ -283,16 +287,20 @@
           :schema $ quote skir.schema/ServerOptions
         'end-response-body! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn end-response-body! (res body)
-            res .end! $ cond
-                list? body
-                format-cirru-edn body
-              (map? body) (format-cirru-edn body)
-              (nil? body) |
-              (string? body) body
-              (tag? body) (to-lispy-string body)
-              (contract/expect-bool |Array.isArray (js/Array.isArray body))
-                js/JSON.stringify body
-              true $ js/JSON.stringify body
+            res .end! $ if (js-nullish? body) | $ match (try-decode-map-as body String)
+              (:ok text) text
+              (:err _)
+                match (try-decode-map-as body Tag)
+                  (:ok tag) (to-lispy-string tag)
+                  (:err _)
+                    match
+                      try-decode-map-as body $ List Dynamic
+                      (:ok items) (format-cirru-edn items)
+                      (:err _)
+                        match
+                          try-decode-map-as body $ Map Dynamic Dynamic
+                          (:ok pairs) (format-cirru-edn pairs)
+                          (:err _) (js/JSON.stringify body)
             , &unit
           :examples $ []
           :schema $ quote $ Fn node/NodeServerResponseHost Body (-> Unit) (:generics Body) (:features :js-ffi)
@@ -302,24 +310,28 @@
               let
                   edn-req $ req->edn req
                   response $ handler edn-req res
-                cond
-                    map? response
-                    write-response! res response
-                  (fn? response)
-                    let
-                        callback-handler $ unsafe-coerce response $ Fn
-                          Fn Dynamic $ -> Unit
-                          -> Unit
-                      callback-handler $ fn (response-data) (write-response! res response-data)
-                  (shared/promise? response)
-                    let
-                        promise $ unsafe-coerce response 'js-ffi.shared/PromiseHost
-                      promise .then! $ fn (result) (write-response! res result)
-                      promise .catch! $ fn (err) (js/console.error err) (raise err)
-                      , &unit
-                  (and (tag? response) (= response :effect))
-                    , &unit
-                  true $ do (println |Response: response) (raise "|Unknown response!")
+                match
+                  try-decode-map-as response $ Map Dynamic Dynamic
+                  (:ok response-map) (write-response! res response-map)
+                  (:err _)
+                    cond
+                        fn? response
+                        let
+                            callback-handler $ unsafe-coerce response $ Fn
+                              Fn Dynamic $ -> Unit
+                              -> Unit
+                          callback-handler $ fn (response-data) (write-response! res response-data)
+                      (shared/promise? response)
+                        let
+                            promise $ unsafe-coerce response 'js-ffi.shared/PromiseHost
+                          promise .then! $ fn (result) (write-response! res result)
+                          promise .catch! $ fn (err) (js/console.error err) (raise err)
+                          , &unit
+                      true $ match (try-decode-map-as response Tag)
+                        (:ok tag)
+                          if (= tag :effect) &unit $ do (println |Response: response) (raise "|Unknown response!")
+                        (:err _)
+                          do (println |Response: response) (raise "|Unknown response!")
               fn (err) (write-server-error! res err)
           :examples $ []
           :schema $ quote $ Fn node/NodeRequestHost node/NodeServerResponseHost
@@ -419,17 +431,29 @@
         'write-response! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-response! (res edn-res)
             let
-                edn-res $ if (map? edn-res) edn-res $ raise "|expects response map"
+                edn-res $ match
+                  try-decode-map-as edn-res $ Map Dynamic Dynamic
+                  (:ok value) value
+                  (:err _) (raise "|expects response map")
               js-set res :status-code $ match (get edn-res :code)
-                (:some response-code) (either response-code 200)
+                (:some response-code)
+                  match (try-decode-map-as response-code Number)
+                    (:ok code) code
+                    (:err _) 200
                 (:none) 200
               js-set res :status-message $ match (get edn-res :message)
-                (:some response-message) (either response-message |OK)
+                (:some response-message)
+                  match (try-decode-map-as response-message String)
+                    (:ok message) message
+                    (:err _) |OK
                 (:none) |OK
               &doseq
                 pair $ match (get edn-res :headers)
                   (:some response-headers)
-                    either response-headers $ {}
+                    match
+                      try-decode-map-as response-headers $ Map Dynamic Dynamic
+                      (:ok headers) headers
+                      (:err _) ({})
                   (:none) ({})
                 let[] (key value)
                   decode-map-as pair $ List Dynamic
@@ -678,15 +702,20 @@
           :schema $ quote $ Fn (-> JsObject) (:features :js-ffi)
         'key->str $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn key->str (v)
-            cond
-                tag? v
-                to-string v
-              (string? v) v
-              (list? v) (to-lispy-string v)
-              (map? v) (to-lispy-string v)
-              true $ str v
+            match (try-decode-map-as v Tag)
+              (:ok tag) (to-string tag)
+              (:err _) (str v)
           :examples $ []
           :schema $ quote $ Fn T (-> String) (:generics T)
+          :tests $ [] $ %{} 'TestEntry (:name |key-conversions)
+            :code $ quote $ do
+              assert= |content-type $ key->str :content-type
+              assert= |text/plain $ key->str |text/plain
+              assert= "|([] 1 |a)" $ key->str $ [] 1 |a
+              assert= "|({} (:a 1))" $ key->str $ {} (:a 1)
+              assert= |42 $ key->str 42
+              assert= |true $ key->str true
+            :tags $ #{} :unit
         'promise-create $ %{} 'CodeEntry
           :doc "|Create a PromiseHost from a typed (resolve reject) executor."
           :code $ quote $ defn promise-create (executor) (shared/promise-create executor)
